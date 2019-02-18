@@ -135,7 +135,7 @@ int voter_CFTP(Eigen::MatrixXd &mat){
         //reinitialize first column
         for(int i = 0; i < nStates; i++){
             int randState = random_transition(mat, i,r);
-            M(i,0) = M(randState,0);
+            M(i,0) = M(randState,1);
         }
         int sample = isCoalesced(M);
         if(sample != -1){
