@@ -7,8 +7,10 @@
 
 #include<vector>
 #include "Eigen/Core"
+#include "MatrixFunctions.hpp"
 #include "Eigen/Eigenvalues"
 #include"MarkovChain.hpp"
+#include"MarkovEstimator.hpp"
 #include<random>
 #include<iostream>
 #include<algorithm>
@@ -177,7 +179,7 @@ MarkovChain::~MarkovChain(){
      */
     Eigen::MatrixXd MarkovChain::limitingDistribution(int expon){
         Eigen::MatrixXd limmat;
-        limmat = _transition.array().pow(expon).matrix();
+        limmat = _transition.pow(expon);
         return limmat.row(0);
     }
     
@@ -189,7 +191,7 @@ MarkovChain::~MarkovChain(){
      */
     Eigen::MatrixXd MarkovChain::limitingMat(int expon){
         Eigen::MatrixXd limmat;
-        limmat = _transition.array().pow(expon).matrix();
+        limmat = _transition.pow(expon);
         return limmat;
     }
 
