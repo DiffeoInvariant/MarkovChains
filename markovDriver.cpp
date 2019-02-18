@@ -1,4 +1,5 @@
 #include"MarkovChain.cpp"
+#include"MarkovEstimator.cpp"
 #include<vector>
 #include"Eigen/Core"
 #include<random>
@@ -62,17 +63,17 @@ int main(int argc, char* argv[]){
             }
             
             
-            Eigen::MatrixXf p(n,n);
-            float entry;
+            Eigen::MatrixXd p(n,n);
+            double entry;
             string e;
             std::cout << "Enter matrix elements one-by-one, by row, pressing enter each time." <<endl;
             for(int i = 0; i< n; i++){
-                float rowsum = 0;
+                double rowsum = 0;
                 for(int j = 0; j<n; j++){
                     
                     getline(cin, e);
                     try{
-                        entry = (float)stof(e);
+                        entry = (double)stof(e);
                         rowsum += entry;
                     } catch(exception &msg){
                         cerr << "Error: " << msg.what() << endl;
@@ -110,12 +111,12 @@ int main(int argc, char* argv[]){
             }//end for
             
             //make initial distribution
-            Eigen::MatrixXf init(1,n);
+            Eigen::MatrixXd init(1,n);
             std::cout << "Now, enter the initial distribution. Enter " << n << " numbers,  pressing enter each time" << endl;
             for(int i = 0; i<n; i++){
                 getline(cin, e);
                 try{
-                    entry = (float)stof(e);
+                    entry = (double)stof(e);
                     init(0,i) = entry;
                 } catch(exception &msg){
                     cerr <<  "Error: " << msg.what() << endl;
@@ -151,17 +152,17 @@ int main(int argc, char* argv[]){
                 }
             }
             
-            Eigen::MatrixXf p(n,n);
-            float entry;
+            Eigen::MatrixXd p(n,n);
+            double entry;
             string e;
             std::cout << "Enter matrix elements one-by-one, by row, pressing enter each time." <<endl;
             for(int i = 0; i< n; i++){
-                float rowsum = 0;
+                double rowsum = 0;
                 for(int j = 0; j<n; j++){
                     
                     getline(cin, e);
                     try{
-                        entry = (float)stof(e);
+                        entry = (double)stof(e);
                         rowsum += entry;
                     } catch(exception &msg){
                         cerr << "Error: " << msg.what() << endl;
@@ -214,13 +215,13 @@ int main(int argc, char* argv[]){
             }
             //make initial distribution
             string e;
-            float entry;
-            Eigen::MatrixXf init(1,n);
+            double entry;
+            Eigen::MatrixXd init(1,n);
             std::cout << "Now, enter the initial distribution. Enter " << n << " numbers,  pressing enter after each." << endl;
             for(int i = 0; i<n; i++){
                 getline(cin, e);
                 try{
-                    entry = (float)stof(e);
+                    entry = (double)stof(e);
                     init(0,i) = entry;
                 } catch(exception &msg){
                     cerr << "Error: " << msg.what() << endl;
@@ -320,15 +321,14 @@ int main(int argc, char* argv[]){
         }
         case 10:
         {
-            int n;
-            string num;
+            
             std::cout << "We will compute the matrix where element (i,j) is 1 if state j can be reached from state i, 0 else.";
             
             cout << mc.isReachable() <<endl;
         }
         case 11:
         {
-            Eigen::MatrixXf cc = mc.communicatingClasses();
+            Eigen::MatrixXd cc = mc.communicatingClasses();
             cout << cc <<endl;
             break;
         }

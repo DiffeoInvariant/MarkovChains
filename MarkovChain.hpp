@@ -34,25 +34,25 @@ public:
      * @source: https://www.codeproject.com/Articles/808292/Markov-chain-implementation-in-Cplusplus-using-Eig
      */
     
-    void setModel( Eigen::MatrixXf transition, Eigen::MatrixXf initial, int _numStates){
+    void setModel( Eigen::MatrixXd transition, Eigen::MatrixXd initial, int _numStates){
         _transition = transition;
         _initial = initial;
         numStates = _numStates;
     }
     
-    void setTransition(Eigen::MatrixXf transition){
+    void setTransition(Eigen::MatrixXd transition){
         _transition = transition;
 }
     
-    void setInitial(Eigen::MatrixXf initial){
+    void setInitial(Eigen::MatrixXd initial){
         _initial = initial;
     }
     void setNumStates(int _num){
         numStates = _num;
     }
     
-    Eigen::MatrixXf getTransition(void) const { return _transition; }
-    Eigen::MatrixXf getInit() const { return _initial; }
+    Eigen::MatrixXd getTransition(void) const { return _transition; }
+    Eigen::MatrixXd getInit() const { return _initial; }
     int getNumStates(void) const {return numStates;}
     /**
      ** @name MarkovChain::computeProbability
@@ -62,7 +62,7 @@ public:
      * @return: p, the probability that that the Markov chain generates
      * this sequence.
      */
-    float computeProbability(vector<int> sequence);
+    double computeProbability(vector<int> sequence);
     
     
     /**
@@ -74,7 +74,7 @@ public:
      * @source: https://www.codeproject.com/Articles/808292/Markov-chain-implementation-in-Cplusplus-using-Eig
      * @modifications: changed random number generator to modern standard
      */
-    int randTransition(Eigen::MatrixXf matrix, int index);
+    int randTransition(Eigen::MatrixXd matrix, int index);
     
     /**
      * @name MarkovChain::generateSequence
@@ -89,9 +89,9 @@ public:
      * @name MarkovChain::stationaryDistributions
      * @summary: stationaryDistributions returns the last stationary distributions of the
      * Markov Chain.
-     * @return: vector of floats corresponding to the last stationary distribution (by order of the eigenvalues)
+     * @return: vector of doubles corresponding to the last stationary distribution (by order of the eigenvalues)
      */
-    Eigen::Matrix<complex<float>,Eigen::Dynamic,Eigen::Dynamic> stationaryDistributions();
+    Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> stationaryDistributions();
     
     /**
      * @name MarkovChain::limitingDistribution
@@ -99,7 +99,7 @@ public:
      * @param expon: computes 10^expon powers of _transition
      * @return limmat.row(0): limiting distribution
      */
-    Eigen::MatrixXf limitingDistribution(int expon);
+    Eigen::MatrixXd limitingDistribution(int expon);
     
     /**
      * @name MarkovChain::limitingMat
@@ -107,28 +107,28 @@ public:
      * @param expon: computes 10^expon powers of _transition
      * @return limmat: limiting distribution matrix
      */
-    Eigen::MatrixXf limitingMat(int expon);
+    Eigen::MatrixXd limitingMat(int expon);
     
     /**
      * @author: Zane Jakobs
      * @return: matrix of number of paths of length n from state i to state j
      */
-    Eigen::MatrixXf numPaths(int n);
+    Eigen::MatrixXd numPaths(int n);
         
         /**
          * @author: Zane Jakobs
          * @return 1 or 0 for if state j can be reached from state i
          */
-    Eigen::MatrixXf isReachable(void);
+    Eigen::MatrixXd isReachable(void);
         
         /**
          * @author: Zane Jakobs
          * @return matrix where each row has a 1 in the column of each element in that communicating class (one row = one class)
          */
-    Eigen::MatrixXf communicatingClasses(void);
+    Eigen::MatrixXd communicatingClasses(void);
     
 private:
-    Eigen::MatrixXf _transition, _initial;
+    Eigen::MatrixXd _transition, _initial;
     int numStates;
 };
 #endif

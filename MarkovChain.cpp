@@ -19,7 +19,7 @@ using namespace Eigen;
 ostream& operator<<(ostream &os, MarkovChain &MC){
     os << "Probability Matrix:" <<endl;
     
-    Eigen::MatrixXf mat =  MC.getTransition();
+    Eigen::MatrixXd mat =  MC.getTransition();
     os << "  || ";
     for(int i = 0; i < mat.cols(); i++){
         os << i << " ";
@@ -70,9 +70,9 @@ MarkovChain::~MarkovChain(){
 	* @return: p, the probability that that the Markov chain generates 
 	* this sequence.
 	*/
-	float MarkovChain::computeProbability(vector<int> sequence){
-		float p = 0;
-		float init = _initial(0,sequence[0]);
+	double MarkovChain::computeProbability(vector<int> sequence){
+		double p = 0;
+		double init = _initial(0,sequence[0]);
 		p = init;
 
         for(int i = 0; i< sequence.size() -1; i++){
@@ -92,7 +92,7 @@ MarkovChain::~MarkovChain(){
      * @source: https://www.codeproject.com/Articles/808292/Markov-chain-implementation-in-Cplusplus-using-Eig
      * @modifications: changed random number generator to modern standard
 	*/
-    int MarkovChain::randTransition(Eigen::MatrixXf matrix, int index){
+    int MarkovChain::randTransition(Eigen::MatrixXd matrix, int index){
 		//set random seed
 		random_device rd;
 		//init Mersenne Twistor
@@ -100,7 +100,7 @@ MarkovChain::~MarkovChain(){
 		// unif(0,1)
 		uniform_real_distribution<> dis(0.0,1.0);
 		double u = dis(gen);
-        float s = matrix(index,0);
+        double s = matrix(index,0);
 		int i = 0;
         
 		while(u > s && (i < matrix.cols())){
@@ -140,20 +140,20 @@ MarkovChain::~MarkovChain(){
      * @name MarkovChain::stationaryDistributions
      * @summary: stationaryDistributions returns the last stationary distributions of the
      * Markov Chain.
-     * @return: vector of floats corresponding to the last stationary distribution (by order of the eigenvalues)
+     * @return: vector of doubles corresponding to the last stationary distribution (by order of the eigenvalues)
      */
-    Eigen::Matrix<complex<float>,Eigen::Dynamic,Eigen::Dynamic> MarkovChain::stationaryDistributions(){
+    Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> MarkovChain::stationaryDistributions(){
         //instantiate eigensolver
-        Eigen::EigenSolver<Eigen::MatrixXf> es;
+        Eigen::EigenSolver<Eigen::MatrixXd> es;
         //transpose transition matrix to find left eigenvectors
-        Eigen::MatrixXf pt = _transition.transpose();
+        Eigen::MatrixXd pt = _transition.transpose();
         //compute evecs, evals
         es.compute( pt, true);
         //store evals
-        Eigen::Matrix<complex<float>,Eigen::Dynamic,Eigen::Dynamic> evals = es.eigenvalues();
+        Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> evals = es.eigenvalues();
         
-        Eigen::Matrix<complex<float>,Eigen::Dynamic,Eigen::Dynamic> evecs = es.eigenvectors();
-        Eigen::Matrix<complex<float>,1,2> dotmat;
+        Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> evecs = es.eigenvectors();
+        Eigen::Matrix<complex<double>,1,2> dotmat;
         dotmat(0,0) = 1;
         dotmat(0,1) = 0;
         int count = 0;
@@ -175,12 +175,9 @@ MarkovChain::~MarkovChain(){
      * @param expon: computes 10^expon powers of _transition
      * @return limmat.row(0): limiting distribution
      */
-    Eigen::MatrixXf MarkovChain::limitingDistribution(int expon){
-        Eigen::MatrixXf limmat = _transition;
-        
-        for(int i = 1; i<= pow(10,expon); i++){
-            limmat = limmat*_transition;
-        }
+    Eigen::MatrixXd MarkovChain::limitingDistribution(int expon){
+        Eigen::MatrixXd limmat;
+        limmat = _transition.array().pow(expon).matrix();
         return limmat.row(0);
     }
     
@@ -190,12 +187,9 @@ MarkovChain::~MarkovChain(){
      * @param expon: computes 10^expon powers of _transition
      * @return limmat: limiting distribution matrix
      */
-    Eigen::MatrixXf MarkovChain::limitingMat(int expon){
-        Eigen::MatrixXf limmat = _transition;
-        
-        for(int i = 1; i<= pow(10,expon); i++){
-            limmat = limmat*_transition;
-        }
+    Eigen::MatrixXd MarkovChain::limitingMat(int expon){
+        Eigen::MatrixXd limmat;
+        limmat = _transition.array().pow(expon).matrix();
         return limmat;
     }
 
@@ -203,7 +197,7 @@ MarkovChain::~MarkovChain(){
  * @summary: does mat contain key?
  * @return: answer to above question, true or false for yes or no
  */
-bool contains(Eigen::MatrixXf mat, float key){
+bool contains(Eigen::MatrixXd mat, double key){
     int n = mat.cols();
     for(int i = 0; i<n; i++){
         for(int j = 0; j < n; j++){
@@ -216,8 +210,8 @@ bool contains(Eigen::MatrixXf mat, float key){
  * @author: Zane Jakobs
  * @return: matrix of number of paths of length n from state i to state j
  */
-Eigen::MatrixXf MarkovChain::numPaths(int n){
-    Eigen::MatrixXf logicMat(numStates,numStates);
+Eigen::MatrixXd MarkovChain::numPaths(int n){
+    Eigen::MatrixXd logicMat(numStates,numStates);
     for(int i = 0; i< numStates; i++){
         for(int j = 0; j < numStates; j++){
             if(_transition(i,j) != 0){
@@ -229,7 +223,7 @@ Eigen::MatrixXf MarkovChain::numPaths(int n){
         }//end inner for
     }
         if(n > 1){
-            Eigen::MatrixXf powmat = logicMat;
+            Eigen::MatrixXd powmat = logicMat;
             for(int i = 0; i < n; i++){
                 powmat = powmat * logicMat;
             }
@@ -244,12 +238,12 @@ Eigen::MatrixXf MarkovChain::numPaths(int n){
  * @author: Zane Jakobs
  * @return 1 or 0 for if state j can be reached from state i
  */
-Eigen::MatrixXf MarkovChain::isReachable(void){
-    Eigen::MatrixXf R(numStates,numStates);
-    Eigen::MatrixXf Rcomp = Eigen::MatrixXf::Identity(numStates,numStates);
+Eigen::MatrixXd MarkovChain::isReachable(void){
+    Eigen::MatrixXd R(numStates,numStates);
+    Eigen::MatrixXd Rcomp = Eigen::MatrixXd::Identity(numStates,numStates);
     
     Rcomp = (Rcomp + numPaths(1));
-    Eigen::MatrixXf rpow = Rcomp;
+    Eigen::MatrixXd rpow = Rcomp;
     for(int i = 0; i < numStates - 1; i++){
         rpow = rpow * Rcomp;
     }
@@ -280,10 +274,10 @@ bool isInVec(std::vector<int> v, int key){
  * @author: Zane Jakobs
  * @return matrix where each row has a 1 in the column of each element in that communicating class (one row = one class)
  */
-Eigen::MatrixXf MarkovChain::communicatingClasses(void){
-    Eigen::MatrixXf CC(numStates,numStates);
-    Eigen::MatrixXf reachable = isReachable();
-    Eigen::MatrixXf uniqueC(numStates,numStates);
+Eigen::MatrixXd MarkovChain::communicatingClasses(void){
+    Eigen::MatrixXd CC(numStates,numStates);
+    Eigen::MatrixXd reachable = isReachable();
+    Eigen::MatrixXd uniqueC(numStates,numStates);
     for(int i = 0; i< numStates; i++){
         for(int j = 0; j < numStates; j++){
             if(reachable(i,j) == 1 && reachable(j,i) == 1){
