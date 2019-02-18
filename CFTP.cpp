@@ -1,6 +1,7 @@
 
 #include "CFTP.hpp"
 #include "Eigen/Core"
+#include "MatrixFunctions.hpp"
 #include<deque>
 #include<random>
 #include<algorithm>
@@ -12,7 +13,7 @@ using namespace Eigen;
 
 Eigen::MatrixXd matPow(Eigen::MatrixXd &mat, int _pow){
     Eigen::MatrixXd limmat;
-    limmat = mat.array().pow(_pow).matrix();
+    limmat = mat.pow(_pow);
     return limmat;
 }
 
@@ -89,9 +90,9 @@ int isCoalesced(Eigen::MatrixXd &mat){
 int random_transition(Eigen::MatrixXd &mat, int init_state, double r){
     double s = mat(init_state,0);
     int i = 0;
-    while(double(r) > s && (i < mat.cols())){
+    while(r > s && (i < mat.cols()-1)){
+        i++;
         s += mat(init_state,i);
-        i += 1;
     }
     
     return i;
@@ -111,14 +112,14 @@ int voter_CFTP(Eigen::MatrixXd &mat){
     for(int i = 0; i < nStates; i++){
         M(i,0) = i;
     }
-    
+    //set random seed
+    random_device rd;
+    //init Mersenne Twistor
+    mt19937 gen(rd());
+    // unif(0,1)
+    uniform_real_distribution<> dis(0.0,1.0);
     while(not coalesced){
-        //set random seed
-        random_device rd;
-        //init Mersenne Twistor
-        mt19937 gen(rd());
-        // unif(0,1)
-        uniform_real_distribution<> dis(0.0,1.0);
+        
         
         double r = dis(gen);
         
@@ -126,22 +127,29 @@ int voter_CFTP(Eigen::MatrixXd &mat){
         //T -= 1, starting at T = 0 above while loop;
         M.conservativeResize(M.rows(), M.cols()+1);
         //move every element one to the right
-        for(int i = M.cols(); i >0; i++){
-            M.col(i) = M.col(i-1);
+        for(int i = M.cols()-1; i > 0; i--){
+            Eigen::MatrixXd temp = M.col(i-1);
+            M.col(i) = temp;
+               
         }
         //reinitialize first column
         for(int i = 0; i < nStates; i++){
-            int randState = random_transition(M, i,r);
-            M(i,0) = M(randState,1);
+            int randState = random_transition(mat, i,r);
+            M(i,0) = M(randState,0);
         }
         int sample = isCoalesced(M);
         if(sample != -1){
             coalesced = true;
             return sample;
         }
-        else{
-            return sample;
-        }
     }
     return -1;
 }
+
+/**
+ *@author: Zane Jakobs
+ * @param trans: transition matrix
+ * @param epsilon,p: variation distance less than epsilon with probability p
+ * @return : distribution
+ */
+//Eigen::MatrixXd voter_CFTP_distribution(Eigen::MatrixXd trans, double epsilon, double p);

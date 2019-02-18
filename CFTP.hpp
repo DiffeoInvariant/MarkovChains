@@ -2,8 +2,10 @@
 #ifndef CFTP_hpp
 #define CFTP_hpp
 
-#include "CFTP.hpp"
 #include "Eigen/Core"
+#include<deque>
+#include<random>
+#include<algorithm>
 /**
  * Coupling From The Past to perfectly sample from a Markov chain matrix mat
  */
