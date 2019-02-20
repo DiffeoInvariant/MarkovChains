@@ -1,5 +1,6 @@
-#include"MarkovChain.cpp"
-#include"MarkovEstimator.cpp"
+#include"MarkovChain.hpp"
+#include"MarkovEstimator.hpp"
+#include "MatrixFunctions.hpp"
 #include<vector>
 #include"Eigen/Core"
 #include<random>
@@ -247,7 +248,7 @@ int main(int argc, char* argv[]){
         {
             int n;
             string num;
-            std::cout << "Calculate to how many powers of 10?" << endl;
+            std::cout << "Calculate to how many powers of the matrix?" << endl;
             getline(cin,num);
             try{
                 n = stoi(num);
@@ -261,7 +262,7 @@ int main(int argc, char* argv[]){
         {
             int n;
             string num;
-            std::cout << "Calculate to how many powers of 10?" << endl;
+            std::cout << "Calculate to how many powers of the matrix?" << endl;
             getline(cin,num);
             try{
                 n = stoi(num);
@@ -281,6 +282,10 @@ int main(int argc, char* argv[]){
         {
             int n;
             string num;
+            if(mc.getInit().cols() <= 1){
+                std::cout << "Error: Enter an initial distribution." << endl;
+                break;
+            }
             std::cout << "How many elements do you want in the sequence?" <<endl;
             getline(cin,num);
             try{

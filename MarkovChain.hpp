@@ -100,7 +100,7 @@ public:
      * @source: https://www.codeproject.com/Articles/808292/Markov-chain-implementation-in-Cplusplus-using-Eig
      * @modifications: changed random number generator to modern standard
      */
-    int randTransition(Eigen::MatrixXd matrix, int index){
+    static int randTransition(Eigen::MatrixXd matrix, int index){
         //set random seed
         random_device rd;
         //init Mersenne Twistor
@@ -257,7 +257,7 @@ public:
         }
         for(int i = 0; i< numStates; i++){
             for(int j = 0; j<numStates; j++){
-                if(Rcomp(i,j) > 0){
+                if(rpow(i,j) > 0){
                     R(i,j) = 1;
                 }
                 else{
@@ -295,28 +295,25 @@ public:
                 }
             }//end inner for
         }//end outer for
-        return CC;
-        
-        
         int count = 0; //how many classes?
         bool found;
         Eigen::MatrixXd uniqueC(1,numStates);
         for(int i = 0; i< numStates; i++ ){
             found = false;
-            for(int j = i +1; j < numStates; j++){
-                if(CC.row(j) == CC.row(i)){
+            for(int j = 0; j < numStates; j++){
+                if(CC.row(j) == CC.row(i) && j != i){
                     found = true;
                 }
             }
             if(!found){
                 if(count > 0){
                     uniqueC.conservativeResize(uniqueC.rows() +1, uniqueC.cols());
+                    
                 }
                 uniqueC.row(count) = CC.row(i);
                 count++;
             }
         }//end outer for
-        
         return uniqueC;
         
     }

@@ -21,7 +21,7 @@ Eigen::MatrixXd matPow(Eigen::MatrixXd &mat, int _pow){
 //void *threadedMatPow(Eigen::MatrixXd &mat, int _pow){
   //  mat = mat.pow(_pow);
 //}
-
+//variation distance between two distributions
 double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2){
     int n = dist1.cols();
     int m = dist2.cols();
