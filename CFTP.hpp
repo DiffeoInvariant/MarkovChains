@@ -4,6 +4,7 @@
 
 #include "Eigen/Core"
 #include<deque>
+#include<valarray>
 #include<random>
 #include<algorithm>
 /**
@@ -29,5 +30,16 @@ int random_transition(Eigen::MatrixXd &mat, int init_state, double r);
  * @return: perfect sample from matrix's distribution
  */
 int voter_CFTP(Eigen::MatrixXd &mat);
+
+int iteratedVoterCFTP(std::mt19937 &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat);
+/**
+ * @author: Zane Jakobs
+ * @param mat: matrix to sample from
+ * @param n: how many samples
+ * @return: vector where i-th entry is the number of times state i appeared
+ */
+valarray<int> sampleVoterCFTP(Eigen::MatrixXd &mat, int n);
+
+
 
 #endif /* CFTP_hpp */

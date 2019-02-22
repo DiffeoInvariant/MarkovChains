@@ -3,6 +3,7 @@
 #include "Eigen/Core"
 #include "MatrixFunctions.hpp"
 #include<deque>
+#include<valarray>
 #include<random>
 #include<algorithm>
 using namespace std;
@@ -153,3 +154,66 @@ int voter_CFTP(Eigen::MatrixXd &mat){
  * @return : distribution
  */
 //Eigen::MatrixXd voter_CFTP_distribution(Eigen::MatrixXd trans, double epsilon, double p);
+
+int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat){
+        int nStates = mat.cols();
+        std::deque<double> R; //random samples
+        
+        Eigen::MatrixXd M(nStates,1);
+        bool coalesced = false;
+        for(int i = 0; i < nStates; i++){
+            M(i,0) = i;
+        }
+        while(not coalesced){
+            
+            
+            double r = dis(gen);
+            
+            R.push_front(r); // R(T) ~ U(0,1)
+            //T -= 1, starting at T = 0 above while loop;
+            M.conservativeResize(M.rows(), M.cols()+1);
+            //move every element one to the right
+            for(int i = M.cols()-1; i > 0; i--){
+                Eigen::MatrixXd temp = M.col(i-1);
+                M.col(i) = temp;
+                
+            }
+            //reinitialize first column
+            for(int i = 0; i < nStates; i++){
+                int randState = random_transition(mat, i,r);
+                M(i,0) = M(randState,1);
+            }
+            int sample = isCoalesced(M);
+            if(sample != -1){
+                coalesced = true;
+                return sample;
+            }
+        }
+        return -1;
+}
+
+
+/**
+ * @author: Zane Jakobs
+ * @param mat: matrix to sample from
+ * @param n: how many samples
+ * @return: vector where i-th entry is the number of times state i appeared
+ */
+valarray<int> sampleVoterCFTP(Eigen::MatrixXd &mat, int n){
+    int cls = mat.cols();
+    //set random seed
+    random_device rd;
+    //init Mersenne Twistor
+    mt19937 gen(rd());
+    // unif(0,1)
+    uniform_real_distribution<> dis(0.0,1.0);
+    
+    valarray<int> arr(cls);
+    int sample;
+    
+    for(int i = 0; i< n; i++){
+        sample = iteratedVoterCFTP( gen, dis, mat);
+        arr[sample]++;
+    }
+    return arr;
+}
