@@ -150,22 +150,24 @@ int voter_CFTP(Eigen::MatrixXd &mat){
 /**
  *@author: Zane Jakobs
  * @param trans: transition matrix
- * @param epsilon,p: variation distance less than epsilon with probability p
+ * @param gen, dis: random number generator stuff
+ * @param R: deque to hold random numbers
+ * @param M: matrix to represent voter CFTP process
+ * @param nStates: how many states?
+ * @param coalesced: has the chain coalesced?
  * @return : distribution
  */
-//Eigen::MatrixXd voter_CFTP_distribution(Eigen::MatrixXd trans, double epsilon, double p);
+int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, int &nStates, bool coalesced = false){
+        //resize M
+        M.resize(nStates,1);
+        //clear R
+        R.clear();
+    
 
-int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat){
-        int nStates = mat.cols();
-        std::deque<double> R; //random samples
-        
-        Eigen::MatrixXd M(nStates,1);
-        bool coalesced = false;
         for(int i = 0; i < nStates; i++){
             M(i,0) = i;
         }
         while(not coalesced){
-            
             
             double r = dis(gen);
             
@@ -179,8 +181,9 @@ int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis,
                 
             }
             //reinitialize first column
+            int randState;
             for(int i = 0; i < nStates; i++){
-                int randState = random_transition(mat, i,r);
+                randState = random_transition(mat, i,r);
                 M(i,0) = M(randState,1);
             }
             int sample = isCoalesced(M);
@@ -199,7 +202,7 @@ int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis,
  * @param n: how many samples
  * @return: vector where i-th entry is the number of times state i appeared
  */
-valarray<int> sampleVoterCFTP(Eigen::MatrixXd &mat, int n){
+std::valarray<int> sampleVoterCFTP(Eigen::MatrixXd &mat, int n){
     int cls = mat.cols();
     //set random seed
     random_device rd;
@@ -210,10 +213,28 @@ valarray<int> sampleVoterCFTP(Eigen::MatrixXd &mat, int n){
     
     valarray<int> arr(cls);
     int sample;
+    std::deque<double> R;
+    Eigen::MatrixXd M;
     
     for(int i = 0; i< n; i++){
-        sample = iteratedVoterCFTP( gen, dis, mat);
+        sample = iteratedVoterCFTP( gen, dis, mat, R, M, cls);
         arr[sample]++;
     }
     return arr;
+}
+
+/**
+ * @author: Zane Jakobs
+ * @param mat: matrix to sample from
+ * @param n: how many samples
+ * @return: VectorXd where i-th entry is the density of state i
+ */
+Eigen::VectorXd voterCFTPDistribution(Eigen::MatrixXd &mat, int n){
+    std::valarray<int> counts = sampleVoterCFTP(mat, n);
+    Eigen::VectorXd res(mat.cols());
+    double sum = double(counts.sum());
+    for(int i = 0; i < mat.cols(); i++){
+        res(i) = counts[i]/sum;
+    }
+    return res;
 }
