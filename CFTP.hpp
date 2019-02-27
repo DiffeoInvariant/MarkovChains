@@ -7,17 +7,32 @@
 #include<valarray>
 #include<random>
 #include<algorithm>
+#include<type_traits>
+using namespace std;
 /**
  * Coupling From The Past to perfectly sample from a Markov chain matrix mat
  */
-
+namespace Markov
+{
+/** template checks if object T has member _transition
+ *
+ */
+#define DEFINE_MEMBER_CHECKER(member) \
+    template<typename T, typename V = bool> \
+    struct has_ ## member : std::false_type{}; \
+    template<typename T> \
+    struct has_ ## member<T, typename enable_if< \
+        !is_same<decltype(declval<T>().member), void>::value, bool >::type > : true_type {};
+    
+#define HAS_MEMBER(C,member) \
+    has_ ## member<C>::value
 Eigen::MatrixXd matPow(Eigen::MatrixXd &mat, int _pow);
-
+ 
 //void *threadedMatPow(Eigen::MatrixXd &mat, int pow);
 
 double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2);
 
-double k_self_variation_distance(Eigen::MatrixXd trans, int k);
+double k_stationary_variation_distance(Eigen::MatrixXd trans, int k);
 int mixing_time(Eigen::MatrixXd &trans);
 
 int isCoalesced(Eigen::MatrixXd &mat);
@@ -31,7 +46,7 @@ int random_transition(Eigen::MatrixXd &mat, int init_state, double r);
  */
 int voter_CFTP(Eigen::MatrixXd &mat);
 
-int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, int &nStates, bool coalesced);
+int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, Eigen::MatrixXd &temp, int &nStates, bool coalesced);
 /**
  * @author: Zane Jakobs
  * @param mat: matrix to sample from
@@ -47,7 +62,7 @@ valarray<int> sampleVoterCFTP(Eigen::MatrixXd &mat, int n);
  * @return: VectorXd where i-th entry is the density of state i
  */
 Eigen::VectorXd voterCFTPDistribution(Eigen::MatrixXd &mat, int n);
-
+}
 
 
 #endif /* CFTP_hpp */

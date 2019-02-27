@@ -1,6 +1,5 @@
 /**
- * @summary : implementation of a Markov chain. Basic class template and some functions from
- * https://www.codeproject.com/Articles/808292/Markov-chain-implementation-in-Cplusplus-using-Eig.
+ * @summary : implementation of a Markov chain. 
  * Note that any individual functions not written by the author here have source links in the comments above the declaration
  * @author : Zane Jakobs
  */
@@ -11,12 +10,15 @@
 #include"Eigen/Core"
 #include"Eigen/Eigenvalues"
 #include "MatrixFunctions.hpp"
+#include "Eigen/src/Core/util/Constants.h"
 #include"Eigen/Dense"
 #include<random>
 #include<iostream>
 #include<cmath>
 using namespace std;
 
+namespace Markov
+{
 class MarkovChain
 {
     
@@ -85,6 +87,11 @@ public:
     
     MarkovChain() {};
     
+    MarkovChain( Eigen::MatrixXd transition, Eigen::MatrixXd initial, int _numStates){
+        _transition = transition;
+        _initial = initial;
+        numStates = _numStates;
+    }
     ~MarkovChain(){
         _transition.resize(0,0);
         _initial.resize(0,0);
@@ -98,49 +105,67 @@ public:
      * @summary: initialRand: generates random state
      * @param matrix: transition matrix
      * @param index: current state
+     * @param gen, dis: pRNG generation
      * @return index corresponding to the transition we make
-     * @source: https://www.codeproject.com/Articles/808292/Markov-chain-implementation-in-Cplusplus-using-Eig
-     * @modifications: changed random number generator to modern standard
      */
-    static int randTransition(Eigen::MatrixXd matrix, int index){
-        //set random seed
-        random_device rd;
-        //init Mersenne Twistor
-        mt19937 gen(rd());
-        // unif(0,1)
-        uniform_real_distribution<> dis(0.0,1.0);
+    static int randTransition(Eigen::MatrixXd &matrix, int index, mt19937 &gen, uniform_real_distribution<> &dis){
+        
+        int cls = matrix.cols();
+        if( index >= cls){
+            cout << "index "<< index << endl;
+            throw "Error: index too large in MarkovChain.hpp";
+        }
         double u = dis(gen);
         double s = matrix(index,0);
-        int i = 0;
-        
-        while(u > s && (i < matrix.cols())){
-            s += matrix(index,i);
-            i += 1;
+        if(u <= s){
+            return 0;
         }
-        
-        return i;
+        int i = 1;
+    
+        for(i = 1; (i < cls) && (u > s); i++ ){
+            if( i >= cls){
+                cout << "i "<< i << " u " << u << " s " << s << endl;
+                throw "Error on line 121 in MarkovChain.hpp: Index too large";
+            }
+            s += matrix(index,i);
+        }
+        return (i--);
     }
+    
     
     /**
      * @name MarkovChain::generateSequence
      * @summary: generateSequence generates a sequence of length n from the Markov chain
      * @param n: length of sequence
      * @return: vector of ints representing the sequence
-     * @ source: https://www.codeproject.com/Articles/808292/Markov-chain-implementation-in-Cplusplus-using-Eig
      */
     vector<int> generateSequence(int n){
         std::vector<int> sequence(n);
-        int i, index;
+        int i, id;
         i = 0;
-        index = 0;
+        id = 0;
+        //set random seed
+        random_device rd;
+        //init Mersenne Twistor
+        mt19937 gen(rd());
+        // unif(0,1)
+        uniform_real_distribution<> dis(0.0,1.0);
+        //generate initial state via transition from 0 through initial distribution
+        try{
+        int init = randTransition(_initial,0, gen, dis);
+            sequence[i] = init;
+            id = init;
+        }catch(const char* msg){
+            cerr << msg << endl;
+        }
         
-        //generate initial state
-        int init = randTransition(_initial,0);
-        sequence[i] = init;
-        index = init;
         for(i = 1; i<n; i++){
-            index = randTransition(_transition,index);
-            sequence[i] = index;
+            try{
+            id = randTransition(_transition,id, gen, dis);
+            }catch(const char* msg){
+                cerr << msg << endl;
+            }
+            sequence[i] = id;
         }
         return sequence;
         
@@ -233,10 +258,7 @@ public:
             }//end inner for
         }
         if(n > 1){
-            Eigen::MatrixXd powmat = logicMat;
-            for(int i = 0; i < n; i++){
-                powmat = powmat * logicMat;
-            }
+            Eigen::MatrixXd powmat = logicMat.pow(n);
             return powmat;
         }
         
@@ -250,16 +272,14 @@ public:
      */
     Eigen::MatrixXd isReachable(void){
         Eigen::MatrixXd R(numStates,numStates);
-        Eigen::MatrixXd Rcomp = Eigen::MatrixXd::Identity(numStates,numStates);
-        
-        Rcomp = (Rcomp + numPaths(1));
-        Eigen::MatrixXd rpow = Rcomp;
-        for(int i = 0; i < numStates - 1; i++){
-            rpow = rpow * Rcomp;
+        Eigen::MatrixXd Rcomp = Eigen::MatrixXd::Zero(numStates,numStates);
+    
+        for(int i = 1; i <= numStates; i++){
+            Rcomp += _transition.pow(i);
         }
         for(int i = 0; i< numStates; i++){
             for(int j = 0; j<numStates; j++){
-                if(rpow(i,j) > 0){
+                if(Rcomp(i,j) > 0){
                     R(i,j) = 1;
                 }
                 else{
@@ -287,6 +307,7 @@ public:
     Eigen::MatrixXd communicatingClasses(void){
         Eigen::MatrixXd CC(numStates,numStates);
         Eigen::MatrixXd reachable = isReachable();
+        
         for(int i = 0; i< numStates; i++){
             for(int j = 0; j < numStates; j++){
                 if(reachable(i,j) == 1 && reachable(j,i) == 1){
@@ -297,27 +318,44 @@ public:
                 }
             }//end inner for
         }//end outer for
+        
+        /*
         int count = 0; //how many classes?
+        int findId;
         bool found;
-        Eigen::MatrixXd uniqueC(1,numStates);
+        Eigen::MatrixXd uniqueC = Eigen::MatrixXd::Zero(numStates,numStates);
+        Eigen::MatrixXd temp = uniqueC;
         for(int i = 0; i< numStates; i++ ){
             found = false;
             for(int j = 0; j < numStates; j++){
                 if(CC.row(j) == CC.row(i) && j != i){
                     found = true;
+                    findId = i;
                 }
             }
             if(!found){
-                if(count > 0){
-                    uniqueC.conservativeResize(uniqueC.rows() +1, uniqueC.cols());
-                    
-                }
                 uniqueC.row(count) = CC.row(i);
                 count++;
             }
+            else{
+                found = false;
+                for(int i = 0; i < count && !found; i++){
+                    if(uniqueC.row(i) == CC.row(findId)){
+                        found = true;
+                    }
+                }
+                if(!found){
+                    uniqueC.row(count) = CC.row(findId);
+                }
+            }//end else
         }//end outer for
-        return uniqueC;
-        
+        Eigen::MatrixXd finC(count, numStates);
+        for(int i = 0; i < count; i++){
+            finC.row(i) = uniqueC.row(i);
+        }
+        return finC;
+        */
+        return CC;
     }
     /**
      * @author: Zane Jakobs
@@ -540,5 +578,7 @@ private:
     Eigen::MatrixXd _transition, _initial;
     int numStates;
 };
+}
+
 #endif
 

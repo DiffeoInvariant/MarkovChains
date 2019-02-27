@@ -6,6 +6,7 @@
 #include<random>
 #include<iostream>
 using namespace std;
+using namespace Markov;
 /**
  *@author Zane Jakobs
  */
@@ -86,7 +87,7 @@ int main(int argc, char* argv[]){
                 if(rowsum >= 1.01 || rowsum <= 0.99){
                     int resp;
                     string inresp;
-                    throw "Error: Rows do not sum to 1. Press 1 to auto-normalize, 2 to continue.";
+                    std::cerr << "Error: Rows do not sum to 1. Press 1 to auto-normalize, 2 to continue." << endl;
                     getline(cin, inresp);
                     try{
                         resp = stoi(inresp);
@@ -313,8 +314,8 @@ int main(int argc, char* argv[]){
         {
             int n;
             string num;
-            std::cout << "We will compute the matrix where element (i,j) is the number of permissible paths of length ";
-            std::cout << "N from state i to state j. What is N?" <<endl;
+            std::cout << "We will compute the matrix where element (i,j) is the number of permissible paths of length " << endl;
+            std::cout << "N from state i to state j. What is N?" << endl;
             getline(cin,num);
             try{
                 n = stoi(num);
@@ -322,14 +323,14 @@ int main(int argc, char* argv[]){
                 cerr << "Error: " << msg.what() << endl;
             }
             cout << mc.numPaths(n) << endl;
-            
+            break;
         }
         case 10:
         {
             
-            std::cout << "We will compute the matrix where element (i,j) is 1 if state j can be reached from state i, 0 else.";
+            std::cout << "We will compute the matrix where element (i,j) is 1 if state j can be reached from state i, 0 else." << endl;
             
-            cout << mc.isReachable() <<endl;
+            std::cout << mc.isReachable() << endl;
         }
         case 11:
         {

@@ -48,7 +48,9 @@ double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2){
     return sum;
 }
 
-double k_self_variation_distance(Eigen::MatrixXd trans, int k){
+double k_stationary_variation_distance(Eigen::MatrixXd trans, int k){
+    const int matexp = 15;
+    Eigen::MatrixXd pi = (matPow(trans,matexp)).row(0);
     double distance;
     double max = 0;
     int cols = trans.cols();
@@ -56,12 +58,10 @@ double k_self_variation_distance(Eigen::MatrixXd trans, int k){
         Eigen::MatrixXd mat = matPow(trans, k);
     }
     for(int i = 0; i < cols; i++){
-        for(int j = i + 1; j < cols; j++){
-            distance = variation_distance(trans.row(i),trans.row(j));
+            distance = variation_distance(trans.row(i),pi);
             if(distance > max){
                 max = distance;
             }
-        }
     }
     return max;
 }
@@ -70,7 +70,7 @@ int mixing_time(Eigen::MatrixXd &trans){
     const double tol = 0.36787944117144; // 1/e to double precision
     const int max_mix_time = 100; //after this time, we abandon our efforts, as it takes too long to mix
     for(int i = 1; i < max_mix_time; i++){
-        if(k_self_variation_distance(trans, i) < tol){
+        if(k_stationary_variation_distance(trans, i) < tol){
             return i;
         }
     }
@@ -157,7 +157,7 @@ int voter_CFTP(Eigen::MatrixXd &mat){
  * @param coalesced: has the chain coalesced?
  * @return : distribution
  */
-int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, int &nStates, bool coalesced = false){
+int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, Eigen::MatrixXd &temp, int &nStates, bool coalesced = false){
         //resize M
         M.resize(nStates,1);
         //clear R
@@ -176,7 +176,7 @@ int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis,
             M.conservativeResize(M.rows(), M.cols()+1);
             //move every element one to the right
             for(int i = M.cols()-1; i > 0; i--){
-                Eigen::MatrixXd temp = M.col(i-1);
+                temp = M.col(i-1);
                 M.col(i) = temp;
                 
             }
@@ -215,9 +215,9 @@ std::valarray<int> sampleVoterCFTP(Eigen::MatrixXd &mat, int n){
     int sample;
     std::deque<double> R;
     Eigen::MatrixXd M;
-    
+    Eigen::MatrixXd temp;
     for(int i = 0; i< n; i++){
-        sample = iteratedVoterCFTP( gen, dis, mat, R, M, cls);
+        sample = iteratedVoterCFTP( gen, dis, mat, R, M, temp, cls);
         arr[sample]++;
     }
     return arr;
@@ -238,3 +238,5 @@ Eigen::VectorXd voterCFTPDistribution(Eigen::MatrixXd &mat, int n){
     }
     return res;
 }
+
+
