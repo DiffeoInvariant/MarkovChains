@@ -1,5 +1,5 @@
 /**
- * @summary : implementation of a Markov chain. 
+ * @summary : implementation of a Markov chain.
  * Note that any individual functions not written by the author here have source links in the comments above the declaration
  * @author : Zane Jakobs
  */
@@ -19,8 +19,22 @@ using namespace std;
 
 namespace Markov
 {
+    
+    typedef struct
+    {
+        std::vector<int> seq;
+        void set_seq(std::vector<int> _seq){
+            seq = _seq;
+        }
+    }Sequence;
+    
+    
 class MarkovChain
 {
+    
+protected:
+    Eigen::MatrixXd _transition, _initial;
+    int numStates;
     
 public:
     
@@ -97,7 +111,61 @@ public:
         _initial.resize(0,0);
         numStates = 0;
     }
+    
+    
     //transition and initial probability matrix and vector
+    static Eigen::MatrixXd normalize(Eigen::MatrixXd &mat){
+        for(int i = 0; i < mat.rows(); i++){
+            mat.row(i) = mat.row(i)/(mat.row(i).sum());
+        }
+        return mat;
+    }
+    
+    /**
+     * @author: Zane Jakobs
+     * @summary: counts transitions
+     * @param dat: the data
+     * @param oversize: upper bound on the number of states in the chain
+     * @return: estimate of transition matrix, with zero entries where they should be to
+     * preserve communicating classes
+     */
+    static Eigen::MatrixXd countMat(vector<Sequence> df, int oversize = 100){
+        Eigen::MatrixXd mat = Eigen::MatrixXd::Zero(oversize,oversize);
+        
+        //loop through data, entering values
+        int largest = 0; //number of unique states
+        for(auto it = df.begin(); it != df.end(); it++){
+            for(auto jt = (*it).seq.begin(); jt++ != (*it).seq.end(); jt++){
+                auto pos = jt;
+                int s1 = *pos;
+                int s2 = *(pos++);
+                mat(s1,s2) = mat(s1,s2) +1;
+                if(s1 > largest || s2 > largest){
+                    s1 > s2 ? largest = s1 : largest = s2;
+                }
+            }
+        }
+        largest++;
+        /*
+         set matrix size to largest x largest, preserving values
+         */
+        mat.conservativeResize(largest,largest);
+        mat = normalize(mat);
+        return mat;
+    }
+    /**
+     * @author: Zane Jakobs
+     * @summary: computes transition matrix based on empirical distribution of values. In
+     * particular, attempts to find which entries should be zero
+     * @param dat: the data
+     * @param oversize: upper bound on the number of states in the chain
+     * @return: maximum likelihood estimator of _transition
+     */
+   static Eigen::MatrixXd MLE(vector<Sequence> df, int oversize = 100){
+       Eigen::MatrixXd mat = countMat(df, oversize);
+        mat = normalize(mat);
+        return mat;
+    }
     
     
     /**
@@ -573,10 +641,39 @@ public:
         
     }//end function
     
+    //cov(X_s,X_{s+t}), taken from HMM for Time Series: an Intro Using R page 18
+    double cov(int t){
+        const int expon = 15;
+        Eigen::MatrixXd pi = limitingDistribution(expon);
+        Eigen::MatrixXd V = Eigen::MatrixXd::Zero(numStates,numStates);
+        Eigen::MatrixXd vectV(1,numStates);
+        for(int i = 0; i < numStates; i++){
+            V(i,i) = i;
+            vectV(0,i) = i;
+        }
+        Eigen::MatrixXd cov = pi * V * (_transition.pow(t)) * (vectV.transpose());
+        
+        Eigen::MatrixXd dv = pi * (vectV.transpose());
+        
+        cov -= dv*dv;
+        //cov is a 1x1 from line 590 onwards;
+        return cov(0,0);
+        
+    }
     
-private:
-    Eigen::MatrixXd _transition, _initial;
-    int numStates;
+    double log_likelihood(vector<Sequence> df, int oversize = 100){
+        Eigen::MatrixXd f = countMat(df, oversize);
+        double ll = 0;
+        for(int i = 0; i < numStates; i++){
+            for(int j = 0; j < numStates; j++){
+                ll += f(i,j) * log(_transition(i,j));
+            }
+        }
+        
+        
+    }
+    
+
 };
 }
 
