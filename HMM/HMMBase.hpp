@@ -1,5 +1,5 @@
-#ifndef MixtureModel_hpp
-#define MixtureModel_hpp
+#ifndef HMMBase_hpp
+#define HMMBase_hpp
 #include<vector>
 #include"Eigen/Core"
 #include"Eigen/Eigenvalues"
@@ -75,16 +75,9 @@ namespace Markov {
         
     public:
         
-        HMMBase() {};
+        HMMBase();
         //true iff all variances are greater than or equal to min_variance
-        bool has_acceptable_variance(){
-            for(int i = 0; i < distributions.size(); i++){
-                if(distributions[i].variance < min_variance){
-                    return false;
-                }
-            }
-            return true;
-        }
+        bool has_acceptable_variance();
         /**
          * @author: Zane Jakobs
          * @param _data: dataset to set data to
@@ -99,29 +92,9 @@ namespace Markov {
         
         double continuous_weighted_prob(_dtype x, _dtype y);
         //discrete likelihood function
-        double discrete_likelihood(){
-            if(!has_acceptable_variance()){
-                throw "Error: At least one variance is too small, and could lead to an unbounded likelihood";
-            }
-            int n = data.size();//how many datapoints?
-            double prod = 1.0;
-            for(int i = 0; i < n; i ++){
-                prod *= discrete_weighted_prob(data[i]);
-            }
-            return prod;
-        }
+        double discrete_likelihood;
         
-        double continuous_likelihood(){
-            if(!has_acceptable_variance()){
-                throw "Error: At least one variance is too small, and could lead to an unbounded likelihood";
-            }
-            int n = data.size();
-            double prod = 1.0;
-            for(int i = 0; i < n - 1; i++){
-                prod *= continuous_weighted_prob(data[i], data[i+1]);
-            }
-            return prod;
-        }
+        double continuous_likelihood;
         
         double discrete_state_dependent_probability(int hiddenState, _dtype x);
             
@@ -135,9 +108,6 @@ namespace Markov {
          */
         _dtype predict(int hiddenState, _dtype observed_state);
         
-    
     };
     
- 
-
-#endif /* MixtureModel_hpp */
+#endif /* HMMBase_hpp */
