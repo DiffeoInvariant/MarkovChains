@@ -1,4 +1,6 @@
-
+#ifndef EIGEN_USE_MKL_ALL
+#define EIGEN_USE_MKL_ALL
+#endif
 #ifndef CFTP_hpp
 #define CFTP_hpp
 
@@ -17,15 +19,17 @@ namespace Markov
 /** template checks if object T has member _transition
  *
  */
+    /*
 #define DEFINE_MEMBER_CHECKER(member) \
     template<typename T, typename V = bool> \
     struct has_ ## member : std::false_type{}; \
     template<typename T> \
     struct has_ ## member<T, typename enable_if< \
-        !is_same<decltype(declval<T>().member), void>::value, bool >::type > : true_type {};
+    !is_same<decltype(declval<T>().member), void>::value, bool >::type > : true_type {};
     
 #define HAS_MEMBER(C,member) \
     has_ ## member<C>::value
+     */
 Eigen::MatrixXd matPow(Eigen::MatrixXd &mat, int _pow);
  
 //void *threadedMatPow(Eigen::MatrixXd &mat, int pow);

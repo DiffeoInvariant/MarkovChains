@@ -1,5 +1,7 @@
+#ifndef EIGEN_USE_MKL_ALL
+#define EIGEN_USE_MKL_ALL
+#endif
 #include"MarkovChain.hpp"
-#include"MarkovEstimator.hpp"
 #include "MatrixFunctions.hpp"
 #include<vector>
 #include"Eigen/Core"

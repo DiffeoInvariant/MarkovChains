@@ -1,4 +1,6 @@
-
+#ifndef EIGEN_USE_MKL_ALL
+#define EIGEN_USE_MKL_ALL
+#endif
 #include "CFTP.hpp"
 #include "Eigen/Core"
 #include "MatrixFunctions.hpp"

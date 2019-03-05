@@ -3,9 +3,12 @@
  * Note that any individual functions not written by the author here have source links in the comments above the declaration
  * @author : Zane Jakobs
  */
+#ifndef EIGEN_USE_MKL_ALL
+#define EIGEN_USE_MKL_ALL
+#endif
 #ifndef MarkovChain_hpp
 #define MarkovChain_hpp
-
+#include<mkl.h>
 #include<vector>
 #include"Eigen/Core"
 #include"Eigen/Eigenvalues"
@@ -15,6 +18,7 @@
 #include<random>
 #include<iostream>
 #include<cmath>
+#include<mkl.h>
 using namespace std;
 
 namespace Markov
@@ -173,31 +177,25 @@ public:
      * @summary: initialRand: generates random state
      * @param matrix: transition matrix
      * @param index: current state
-     * @param gen, dis: pRNG generation
+     * @param u: random uniform between 0 and 1
      * @return index corresponding to the transition we make
      */
-    static int randTransition(Eigen::MatrixXd &matrix, int index, mt19937 &gen, uniform_real_distribution<> &dis){
+    static int randTransition(Eigen::MatrixXd &matrix, int index, double u){
         
         int cls = matrix.cols();
-        if( index >= cls){
-            cout << "index "<< index << endl;
-            throw "Error: index too large in MarkovChain.hpp";
-        }
-        double u = dis(gen);
         double s = matrix(index,0);
         if(u <= s){
             return 0;
         }
         int i = 1;
     
-        for(i = 1; (i < cls) && (u > s); i++ ){
-            if( i >= cls){
-                cout << "i "<< i << " u " << u << " s " << s << endl;
-                throw "Error on line 121 in MarkovChain.hpp: Index too large";
-            }
+        for(i = 1; i < cls; i++ ){
             s += matrix(index,i);
+            if(u <= s){
+                return i;
+            }
         }
-        return (i--);
+        return (i);
     }
     
     
@@ -212,15 +210,18 @@ public:
         int i, id;
         i = 0;
         id = 0;
+        double randNum;
         //set random seed
         random_device rd;
         //init Mersenne Twistor
         mt19937 gen(rd());
         // unif(0,1)
         uniform_real_distribution<> dis(0.0,1.0);
+        
         //generate initial state via transition from 0 through initial distribution
         try{
-        int init = randTransition(_initial,0, gen, dis);
+            randNum = dis(gen);
+            int init = randTransition(_initial,0, randNum);
             sequence[i] = init;
             id = init;
         }catch(const char* msg){
@@ -229,7 +230,8 @@ public:
         
         for(i = 1; i<n; i++){
             try{
-            id = randTransition(_transition,id, gen, dis);
+                randNum = dis(gen);
+                id = randTransition(_transition,id, randNum);
             }catch(const char* msg){
                 cerr << msg << endl;
             }
@@ -641,24 +643,43 @@ public:
         
     }//end function
     
-    //cov(X_s,X_{s+t}), taken from HMM for Time Series: an Intro Using R page 18
+    /**
+     * @author: Zane Jakobs
+     * @param t: time difference
+     * @return: cov(X_s,X_{s+t}), taken from HMM for Time Series: an Intro Using R page 18
+     */
     double cov(int t){
         const int expon = 15;
         Eigen::MatrixXd pi = limitingDistribution(expon);
         Eigen::MatrixXd V = Eigen::MatrixXd::Zero(numStates,numStates);
         Eigen::MatrixXd vectV(1,numStates);
+        Eigen::MatrixXd cmat;
         for(int i = 0; i < numStates; i++){
             V(i,i) = i;
             vectV(0,i) = i;
         }
-        Eigen::MatrixXd cov = pi * V * (_transition.pow(t)) * (vectV.transpose());
-        
+        if(t > 0){
+            cmat = pi * V * (_transition.pow(t)) * (vectV.transpose());
+        }
+        else{
+            cmat = pi * V* (vectV.transpose());
+        }
         Eigen::MatrixXd dv = pi * (vectV.transpose());
         
-        cov -= dv*dv;
+        cmat -= dv*dv;
         //cov is a 1x1 from line 590 onwards;
-        return cov(0,0);
+        return cmat(0,0);
         
+    }
+    
+    /**
+     * @author: Zane Jakobs
+     * @param t: time difference
+     * @return: corr(X_s,X_{s+t}), taken from HMM for Time Series: an Intro Using R page 18
+     */
+    double corr(int t){
+        double correlation = cov(t)/cov(0);
+        return correlation;
     }
     
     double log_likelihood(vector<Sequence> df, int oversize = 100){
@@ -669,12 +690,16 @@ public:
                 ll += f(i,j) * log(_transition(i,j));
             }
         }
-        
-        
+        return ll;
     }
     
 
 };
+    
+    class ContinuousMarkovChain : public MarkovChain{
+        
+        
+    };
 }
 
 #endif
