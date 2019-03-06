@@ -1,6 +1,8 @@
 #ifndef EIGEN_USE_MKL_ALL
 #define EIGEN_USE_MKL_ALL
+#define MKL_INT size_t
 #endif
+#include<iostream>
 #include "CFTP.hpp"
 #include "Eigen/Core"
 #include "MatrixFunctions.hpp"
@@ -8,18 +10,131 @@
 #include<valarray>
 #include<random>
 #include<algorithm>
+#include<mkl.h>
+#include<complex>
 using namespace std;
 using namespace Eigen;
-//has the chain coalesced? If so, returns sample; else, returns -1
 
-
-
+typedef std::complex<double> CD;
+typedef Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> MatrixXcd;
+namespace Markov{
+/**
+ * @author: Zane Jakobs
+ * @param mat: matrix to raise to power
+ * @param _pow: power of matrix
+ * @return: mat^_pow
+ */
 Eigen::MatrixXd matPow(Eigen::MatrixXd &mat, int _pow){
-    Eigen::MatrixXd limmat;
-    limmat = mat.pow(_pow);
+    Eigen::MatrixXd limmat = mat;
+    while(_pow > 0){
+        if( _pow % 2 == 0){
+            limmat = limmat * limmat;
+            _pow /= 2;
+        }
+        else{
+            _pow--;
+        }
+    }
     return limmat;
 }
-
+    /**
+     * @author: Zane Jakobs
+     * @param mat: matrix to convert to LAPACKE form
+     * @return: pointer to array containing contents of mat in column-major order
+     */
+    double* Eigen_to_LAPACKE(Eigen::MatrixXd& mat){
+        int n = mat.cols();
+        int m = mat.rows();
+        if(m != n){
+            throw "Error: matrix is not square.";
+            return nullptr;
+        }
+        double *a = new double[n*n]; //array to store values
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < n; j++){
+                a[i*n + j] = mat(j,i);
+            }
+        }
+        return a;
+    }
+    //taken from https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/lapacke_sgeev_col.c.htm
+    /**
+     * taken from print function in https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/lapacke_sgeev_col.c.htm
+     fills matrix where columns are eigenvectors in row major order
+     * @param n: dimension of matrix
+     * @param v: array of eigenvectors
+     * @param ldv: dimension of array v
+     */
+     Eigen::MatrixXcd LAPACKE_evec_to_Eigen(MKL_INT n, double* wi, double* v, MKL_INT ldv){
+         MatrixXcd mat(n,n);
+         
+         MKL_INT j;
+         for(MKL_INT i = 0; i < n; i ++){
+             j = 0;
+             while( j < n){
+                 if(wi[j] == 0.0){
+                     CD temp(v[i + j*ldv],0.0);
+                     mat(i,j) = temp;
+                     j++;
+                 }
+                 else{
+                     CD temp(v[i + j*ldv],v[i+(j+1)*ldv]);
+                     mat(i,j) = temp;
+                     CD temp2(v[i + j*ldv], -v[i+(j+1)*ldv]);
+                     mat(i,j+1) = temp2;
+                     j+=2;
+                 }
+             }//end while
+         }//end for
+         return mat;
+    }
+    /**
+     * taken from print function in https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/lapacke_sgeev_col.c.htm
+     fills vector with eigenvalues
+     */
+    MatrixXcd LAPACKE_eval_to_Eigen(MKL_INT n, double* wr, double* wi){
+        Eigen::MatrixXcd eval(1,n);
+        for(MKL_INT j = 0; j < n; j++){
+                CD temp(wr[j],wi[j]);
+                eval(0,j) = temp;
+        }
+        return eval;
+    }
+    /**
+     * @summary: solves eigen-problem
+     * A * v(i) = lambda(i)* v(i)
+     * @return: true for success, false for failure
+     */
+    bool eigenProblem(Eigen::MatrixXd& A, MatrixXcd& v,
+                      MatrixXcd& lambda){
+        //matrices in column major order (eigen default), compute right e-vecs
+        //only
+        
+        int cls = A.cols();
+        MKL_INT n = cls;
+        MKL_INT lda = n, ldvl = n, ldvr = n, info;
+        double wr[cls], wi[cls], vl[cls*cls], vr[cls*cls];
+        double* a = Eigen_to_LAPACKE(A);
+        info = LAPACKE_dgeev(LAPACK_COL_MAJOR, 'N', 'V', n, a, lda, wr,
+                      wi, vl, ldvl, vr, ldvr);
+        //delete memory allocated to a
+        delete a;
+        if(info > 0){
+            //failure condition
+            std::cout << "The solver failed to solve the eigen-problem." << endl;
+            return false;
+        }
+        lambda = LAPACKE_eval_to_Eigen(n, wr, wi);
+        v = LAPACKE_evec_to_Eigen(n, wi, vr, ldvr);
+        return true;
+    }
+    
+    /*
+    Eigen::MatrixXd LAPACK_matPow(Eigen::MatrixXd &mat, int _pow){
+        
+        
+        return mat;
+    }*/
 //matrix power, for threading
 //void *threadedMatPow(Eigen::MatrixXd &mat, int _pow){
   //  mat = mat.pow(_pow);
@@ -109,8 +224,10 @@ int random_transition(Eigen::MatrixXd &mat, int init_state, double r){
 int voter_CFTP(Eigen::MatrixXd &mat){
     int nStates = mat.cols();
     std::deque<double> R; //random samples
-    
-    Eigen::MatrixXd M(nStates,1);
+    int colCount = 1;
+    const int max_cols = 100;
+    //initialize M with 100 columns
+    Eigen::MatrixXd M(nStates,max_cols);
     bool coalesced = false;
     for(int i = 0; i < nStates; i++){
         M(i,0) = i;
@@ -121,16 +238,16 @@ int voter_CFTP(Eigen::MatrixXd &mat){
     mt19937 gen(rd());
     // unif(0,1)
     uniform_real_distribution<> dis(0.0,1.0);
-    while(not coalesced){
+    while(not coalesced && colCount < max_cols){
         
         
         double r = dis(gen);
         
         R.push_front(r); // R(T) ~ U(0,1)
         //T -= 1, starting at T = 0 above while loop;
-        M.conservativeResize(M.rows(), M.cols()+1);
+        colCount++;
         //move every element one to the right
-        for(int i = M.cols()-1; i > 0; i--){
+        for(int i = colCount-1; i > 0; i--){
             Eigen::MatrixXd temp = M.col(i-1);
             M.col(i) = temp;
                
@@ -241,4 +358,4 @@ Eigen::VectorXd voterCFTPDistribution(Eigen::MatrixXd &mat, int n){
     return res;
 }
 
-
+}
