@@ -4,8 +4,7 @@
 #endif
 #include<iostream>
 #include "CFTP.hpp"
-#include "Eigen/Core"
-#include "MatrixFunctions.hpp"
+#include <Eigen/Core>
 #include<deque>
 #include<valarray>
 #include<random>
@@ -24,7 +23,7 @@ namespace Markov{
  * @param _pow: power of matrix
  * @return: mat^_pow
  */
-Eigen::MatrixXd matPow(Eigen::MatrixXd &mat, int _pow){
+Eigen::MatrixXd small_mat_pow(Eigen::MatrixXd &mat, int _pow){
     Eigen::MatrixXd limmat = mat;
     while(_pow > 0){
         if( _pow % 2 == 0){
@@ -37,104 +36,9 @@ Eigen::MatrixXd matPow(Eigen::MatrixXd &mat, int _pow){
     }
     return limmat;
 }
-    /**
-     * @author: Zane Jakobs
-     * @param mat: matrix to convert to LAPACKE form
-     * @return: pointer to array containing contents of mat in column-major order
-     */
-    double* Eigen_to_LAPACKE(Eigen::MatrixXd& mat){
-        int n = mat.cols();
-        int m = mat.rows();
-        if(m != n){
-            throw "Error: matrix is not square.";
-            return nullptr;
-        }
-        double *a = new double[n*n]; //array to store values
-        for(int i = 0; i < n; i++){
-            for(int j = 0; j < n; j++){
-                a[i*n + j] = mat(j,i);
-            }
-        }
-        return a;
-    }
-    //taken from https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/lapacke_sgeev_col.c.htm
-    /**
-     * taken from print function in https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/lapacke_sgeev_col.c.htm
-     fills matrix where columns are eigenvectors in row major order
-     * @param n: dimension of matrix
-     * @param v: array of eigenvectors
-     * @param ldv: dimension of array v
-     */
-     Eigen::MatrixXcd LAPACKE_evec_to_Eigen(MKL_INT n, double* wi, double* v, MKL_INT ldv){
-         MatrixXcd mat(n,n);
-         
-         MKL_INT j;
-         for(MKL_INT i = 0; i < n; i ++){
-             j = 0;
-             while( j < n){
-                 if(wi[j] == 0.0){
-                     CD temp(v[i + j*ldv],0.0);
-                     mat(i,j) = temp;
-                     j++;
-                 }
-                 else{
-                     CD temp(v[i + j*ldv],v[i+(j+1)*ldv]);
-                     mat(i,j) = temp;
-                     CD temp2(v[i + j*ldv], -v[i+(j+1)*ldv]);
-                     mat(i,j+1) = temp2;
-                     j+=2;
-                 }
-             }//end while
-         }//end for
-         return mat;
-    }
-    /**
-     * taken from print function in https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/lapacke_sgeev_col.c.htm
-     fills vector with eigenvalues
-     */
-    MatrixXcd LAPACKE_eval_to_Eigen(MKL_INT n, double* wr, double* wi){
-        Eigen::MatrixXcd eval(1,n);
-        for(MKL_INT j = 0; j < n; j++){
-                CD temp(wr[j],wi[j]);
-                eval(0,j) = temp;
-        }
-        return eval;
-    }
-    /**
-     * @summary: solves eigen-problem
-     * A * v(i) = lambda(i)* v(i)
-     * @return: true for success, false for failure
-     */
-    bool eigenProblem(Eigen::MatrixXd& A, MatrixXcd& v,
-                      MatrixXcd& lambda){
-        //matrices in column major order (eigen default), compute right e-vecs
-        //only
-        
-        int cls = A.cols();
-        MKL_INT n = cls;
-        MKL_INT lda = n, ldvl = n, ldvr = n, info;
-        double wr[cls], wi[cls], vl[cls*cls], vr[cls*cls];
-        double* a = Eigen_to_LAPACKE(A);
-        info = LAPACKE_dgeev(LAPACK_COL_MAJOR, 'N', 'V', n, a, lda, wr,
-                      wi, vl, ldvl, vr, ldvr);
-        //delete memory allocated to a
-        delete a;
-        if(info > 0){
-            //failure condition
-            std::cout << "The solver failed to solve the eigen-problem." << endl;
-            return false;
-        }
-        lambda = LAPACKE_eval_to_Eigen(n, wr, wi);
-        v = LAPACKE_evec_to_Eigen(n, wi, vr, ldvr);
-        return true;
-    }
     
-    /*
-    Eigen::MatrixXd LAPACK_matPow(Eigen::MatrixXd &mat, int _pow){
-        
-        
-        return mat;
-    }*/
+
+
 //matrix power, for threading
 //void *threadedMatPow(Eigen::MatrixXd &mat, int _pow){
   //  mat = mat.pow(_pow);
@@ -307,8 +211,8 @@ int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis,
             }
             int sample = isCoalesced(M);
             if(sample != -1){
-                coalesced = true;
                 return sample;
+                coalesced = true;
             }
         }
         return -1;

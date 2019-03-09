@@ -4,7 +4,7 @@
 #ifndef CFTP_hpp
 #define CFTP_hpp
 
-#include "Eigen/Core"
+#include <Eigen/Core>
 #include<deque>
 #include<valarray>
 #include<random>
@@ -19,7 +19,7 @@ typedef Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> MatrixXcd;
  */
 namespace Markov
 {
-/** template checks if object T has member _transition
+/** template checks if object T has member _transition--NOT NECESSARY AS OF NOW. MAY DELETE
  *
  */
     /*
@@ -35,46 +35,17 @@ namespace Markov
      */
     
     
-
-Eigen::MatrixXd matPow(Eigen::MatrixXd &mat, int _pow);
+    /**
+     * @author: Zane Jakobs
+     * @param mat: matrix to raise to power
+     * @param _pow: power of matrix
+     * @return: mat^_pow
+     */
+    Eigen::MatrixXd small_mat_pow(Eigen::MatrixXd &mat, int _pow)
  
-    
-    /**
-     * Taken from https://software.intel.com/en-us/node/521147
-     * @summary: C++ declaration of FORTRAN function dgeev
-     *
-     */
-    extern "C" lapack_int LAPACKE_dgeev( int matrix_layout, char jobvl, char jobvr, lapack_int n, double* a, lapack_int lda, double* wr, double* wi, double* vl, lapack_int ldvl, double* vr, lapack_int ldvr );
+   
 //void *threadedMatPow(Eigen::MatrixXd &mat, int pow);
-    
-    /**
-     * taken from print function in https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/lapacke_sgeev_col.c.htm
-     fills matrix where columns are eigenvectors in row major order
-     * @param n: dimension of matrix
-     * @param v: array of eigenvectors
-     * @param ldv: dimension of array v
-     */
-    Eigen::MatrixXcd LAPACKE_evec_to_Eigen(MKL_INT n, double* wi, double* v, MKL_INT ldv);
-    
-    /**
-     * taken from print function in https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/lapacke_sgeev_col.c.htm
-     fills vector with eigenvalues
-     */
-    Eigen::MatrixXcd LAPACKE_eval_to_Eigen(MKL_INT n, double* wr, double* wi);
-    
-    /**
-     * @summary: solves eigen-problem
-     * A * v(i) = lambda(i)* v(i)
-     * @return: true for success, false for failure
-     */
-    bool eigenProblem(Eigen::MatrixXd& A, MatrixXcd& v,
-                      MatrixXcd& lambda);
-/**
- * @summary: solves generalized eigen-problem:
- * A * v(i) = lambda(i) * B* v(i)
- * taken from http://eigen.tuxfamily.org/index.php?title=Lapack
- */
-    bool eigenProblem(MatrixXcd& A, MatrixXcd& v, MatrixXcd& lambda);
+   
 double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2);
 
 double k_stationary_variation_distance(Eigen::MatrixXd trans, int k);

@@ -10,19 +10,224 @@
 #define MarkovChain_hpp
 #include<mkl.h>
 #include<vector>
-#include"Eigen/Core"
-#include"Eigen/Eigenvalues"
-#include "MatrixFunctions.hpp"
-#include "Eigen/src/Core/util/Constants.h"
-#include"Eigen/Dense"
+#include<Eigen/Core>
+#include<Eigen/Eigenvalues>
+#include <Eigen/src/Core/util/Constants.h>
+#include<Eigen/Dense>
 #include<random>
 #include<iostream>
 #include<cmath>
 #include<mkl.h>
+#include<type_traits>
+#include<complex>
 using namespace std;
 
 namespace Markov
 {
+    
+    
+    /**
+     * Taken from https://software.intel.com/en-us/node/521147
+     * @summary: C++ declaration of FORTRAN function dgeev
+     *
+     */
+    extern "C" lapack_int LAPACKE_dgeev( int matrix_layout, char jobvl, char jobvr, lapack_int n, double* a, lapack_int lda, double* wr, double* wi, double* vl, lapack_int ldvl, double* vr, lapack_int ldvr );
+    
+    
+    typedef std::complex<double> CD;
+    
+    typedef Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> MatrixXcd;
+    
+    /**
+     * @author: Zane Jakobs
+     * @param mat: matrix to convert to LAPACKE form
+     * @return: pointer to array containing contents of mat in column-major order
+     */
+    double* Eigen_to_LAPACKE(Eigen::MatrixXd& mat){
+        int n = mat.cols();
+        int m = mat.rows();
+        if(m != n){
+            throw "Error: matrix is not square.";
+            return nullptr;
+        }
+        double *a = new double[n*n]; //array to store values
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < n; j++){
+                a[i*n + j] = mat(j,i);
+            }
+        }
+        return a;
+    }
+    /**
+     * taken from print function in https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/lapacke_sgeev_col.c.htm
+     fills matrix where columns are eigenvectors in row major order
+     * @param n: dimension of matrix
+     * @param v: array of eigenvectors
+     * @param ldv: dimension of array v
+     */
+    Eigen::MatrixXcd LAPACKE_evec_to_Eigen(MKL_INT n, double* wi, double* v, MKL_INT ldv){
+        Eigen::MatrixXcd mat(n,n);
+        
+        MKL_INT j;
+        for(MKL_INT i = 0; i < n; i ++){
+            j = 0;
+            while( j < n){
+                if(wi[j] == 0.0){
+                    CD temp(v[i + j*ldv],0.0);
+                    mat(i,j) = temp;
+                    j++;
+                }
+                else{
+                    CD temp(v[i + j*ldv],v[i+(j+1)*ldv]);
+                    mat(i,j) = temp;
+                    CD temp2(v[i + j*ldv], -v[i+(j+1)*ldv]);
+                    mat(i,j+1) = temp2;
+                    j+=2;
+                }
+            }//end while
+        }//end for
+        return mat;
+    }
+    
+    /**
+     * taken from print function in https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/lapacke_sgeev_col.c.htm
+     fills vector with eigenvalues
+     */
+    Eigen::MatrixXcd LAPACKE_eval_to_Eigen(MKL_INT n, double* wr, double* wi){
+        Eigen::MatrixXcd eval(1,n);
+        for(MKL_INT j = 0; j < n; j++){
+            CD temp(wr[j],wi[j]);
+            eval(0,j) = temp;
+        }
+        return eval;
+    }
+    
+    
+    
+    /**
+     * @summary: solves eigen-problem
+     * A * v(i) = lambda(i)* v(i)
+     * @param A: nxn matrix whose eigenstuff we want
+     * @param v: nxn matrix to hold eigenvectors
+     * @param lambda: 1xn matrix (row vector)
+     * @return: true for success, false for failure
+     */
+    bool eigen_problem(Eigen::MatrixXd& A, MatrixXcd& v,
+                      MatrixXcd& lambda){
+        //matrices in column major order (eigen default), compute right e-vecs
+        //only
+        
+        int cls = A.cols();
+        MKL_INT n = cls;
+        MKL_INT lda = n, ldvl = n, ldvr = n, info;
+        double wr[cls], wi[cls], vl[cls*cls], vr[cls*cls];
+        double* a = Eigen_to_LAPACKE(A);
+        info = LAPACKE_dgeev(LAPACK_COL_MAJOR, 'N', 'V', n, a, lda, wr,
+                             wi, vl, ldvl, vr, ldvr);
+        //delete memory allocated to a
+        delete a;
+        if(info > 0){
+            //failure condition
+            std::cout << "The solver failed to solve the eigen-problem." << endl;
+            return false;
+        }
+        lambda = LAPACKE_eval_to_Eigen(n, wr, wi);
+        v = LAPACKE_evec_to_Eigen(n, wi, vr, ldvr);
+        return true;
+    }
+    /**
+     *@author: Zane Jakobs
+     *@summary: default template
+     */
+    
+   
+    Eigen::MatrixXd normalize_rows(Eigen::MatrixXd &mat){
+        for(int i = 0; i < mat.rows(); i++){
+            mat.row(i) = mat.row(i)/(mat.row(i).sum());
+        }
+        return mat;
+    }
+    /**
+     *@author: Zane Jakobs
+     *@param mat: matrix to raise to power
+     *@param expon: power
+     *@return: mat^expon
+     */
+     Eigen::MatrixXcd matrix_power(Eigen::MatrixXd &mat, int expon){
+         int n = mat.cols();
+        Eigen::MatrixXcd v(n,n);
+        Eigen::MatrixXcd v2(n,n);
+        Eigen::MatrixXcd lambda(1,n);
+        bool success = eigen_problem(mat, v, lambda);
+        Eigen::MatrixXd res(n,n);
+        if(success){
+            Eigen::MatrixXcd D = Eigen::MatrixXcd::Zero(n,n);
+            for(int i = 0; i < n; i++){
+                D(i,i) = std::pow(lambda(0,i), expon);
+            }
+            return (v*D*v.inverse()).real();
+        }else{
+            throw "Error: Solver failed.";
+            return (v).real();
+        }
+    }
+    template<typename M>
+    M characteristic_polynomial(Eigen::MatrixXd &mat, M &x){
+        int n = mat.cols();
+        Eigen::MatrixXcd v(n,n);
+        Eigen::MatrixXcd lambda(1,n);
+        bool success = eigen_problem(mat, v, lambda);
+        M res;
+        if(success){
+            res = (x-lambda(0,0));
+            for(int i = 1; i < n; i++){
+                res *= (x-lambda(0,i));
+            }
+        }else{
+            res = x;
+        }
+        return res;
+    }
+    template<>
+    Eigen::MatrixXcd characteristic_polynomial<Eigen::MatrixXcd>(Eigen::MatrixXd &mat, Eigen::MatrixXcd &x){
+        int n = mat.cols();
+        Eigen::MatrixXcd v(n,n);
+        Eigen::MatrixXcd lambda(1,n);
+        bool success = eigen_problem(mat, v, lambda);
+        Eigen::MatrixXcd res;
+        Eigen::MatrixXcd I = Eigen::MatrixXcd::Identity(n,n);;
+        if(success){
+            res = (x-lambda(0,0)*I);
+            for(int i = 1; i < n; i++){
+                res *= (x-lambda(0,i)*I);
+            }
+        } else{
+            res = x;
+        }
+        return res;
+    }
+    
+    template<>
+    Eigen::MatrixXd characteristic_polynomial<Eigen::MatrixXd>(Eigen::MatrixXd &mat, Eigen::MatrixXd &x){
+        int n = mat.cols();
+        Eigen::MatrixXcd v(n,n);
+        Eigen::MatrixXcd lambda(1,n);
+        bool success = eigen_problem(mat, v, lambda);
+        Eigen::MatrixXd lbda(1,n);
+        lbda = lambda.real();
+        Eigen::MatrixXcd res;
+        Eigen::MatrixXcd I = Eigen::MatrixXd::Identity(n,n);;
+        if(success){
+            res = (x-lbda(0,0)*I);
+            for(int i = 1; i < n; i++){
+                res *= (x-lbda(0,i)*I);
+            }
+        } else{
+            res = x;
+        }
+        return res.real();
+    }
+    
     
     typedef struct
     {
@@ -117,13 +322,7 @@ public:
     }
     
     
-    //transition and initial probability matrix and vector
-    static Eigen::MatrixXd normalize(Eigen::MatrixXd &mat){
-        for(int i = 0; i < mat.rows(); i++){
-            mat.row(i) = mat.row(i)/(mat.row(i).sum());
-        }
-        return mat;
-    }
+    
     
     /**
      * @author: Zane Jakobs
@@ -154,7 +353,7 @@ public:
          set matrix size to largest x largest, preserving values
          */
         mat.conservativeResize(largest,largest);
-        mat = normalize(mat);
+        mat = normalize_rows(mat);
         return mat;
     }
     /**
@@ -167,7 +366,7 @@ public:
      */
    static Eigen::MatrixXd MLE(vector<Sequence> df, int oversize = 100){
        Eigen::MatrixXd mat = countMat(df, oversize);
-        mat = normalize(mat);
+        mat = normalize_rows(mat);
         return mat;
     }
     
@@ -180,18 +379,16 @@ public:
      * @param u: random uniform between 0 and 1
      * @return index corresponding to the transition we make
      */
-    static int randTransition(Eigen::MatrixXd &matrix, int index, double u){
-        
-        int cls = matrix.cols();
-        double s = matrix(index,0);
-        if(u <= s){
+     static int randTransition(Eigen::MatrixXd& mat, int ncols, int index, double u){
+        double s = mat(index,0);
+        if(u < s){
             return 0;
         }
         int i = 1;
     
-        for(i = 1; i < cls; i++ ){
-            s += matrix(index,i);
-            if(u <= s){
+        for(i = 1; i < ncols; i++ ){
+            s += mat(index,i);
+            if(u < s){
                 return i;
             }
         }
@@ -200,12 +397,14 @@ public:
     
     
     /**
+     3/9/19: FUNCTION IS NOT WORKING CORRECTLY. NO NOT USE UNTIL THIS COMMENT IS CHANGED
      * @name MarkovChain::generateSequence
      * @summary: generateSequence generates a sequence of length n from the Markov chain
      * @param n: length of sequence
      * @return: vector of ints representing the sequence
      */
-    vector<int> generateSequence(int n){
+    vector<int> generateSequence(int n, int nStates, Eigen::MatrixXd matT, Eigen::MatrixXd initialDist){
+        
         std::vector<int> sequence(n);
         int i, id;
         i = 0;
@@ -221,7 +420,7 @@ public:
         //generate initial state via transition from 0 through initial distribution
         try{
             randNum = dis(gen);
-            int init = randTransition(_initial,0, randNum);
+            int init = randTransition(initialDist,numStates, 0, randNum);
             sequence[i] = init;
             id = init;
         }catch(const char* msg){
@@ -231,11 +430,12 @@ public:
         for(i = 1; i<n; i++){
             try{
                 randNum = dis(gen);
-                id = randTransition(_transition,id, randNum);
+                id = randTransition(matT,nStates, id, randNum);
+                sequence[i] = id;
             }catch(const char* msg){
                 cerr << msg << endl;
             }
-            sequence[i] = id;
+            
         }
         return sequence;
         
@@ -696,10 +896,6 @@ public:
 
 };
     
-    class ContinuousMarkovChain : public MarkovChain{
-        
-        
-    };
 }
 
 #endif
