@@ -152,7 +152,7 @@ typedef Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> MatrixXcd;
  * @param mat: matrix to convert to LAPACKE form
  * @return: pointer to array containing contents of mat in column-major order
  */
-double* Eigen_to_LAPACKE(Eigen::MatrixXd& mat){
+double* Eigen_to_LAPACKE(const Eigen::MatrixXd& mat){
     int n = mat.cols();
     int m = mat.rows();
     if(m != n){
@@ -243,10 +243,7 @@ bool eigen_problem(Eigen::MatrixXd& A, MatrixXcd& v,
     v = LAPACKE_evec_to_Eigen(n, wi, vr, ldvr);
     return true;
 }
-/**
- *@author: Zane Jakobs
- *@summary: default template
- */
+
 
 
 Eigen::MatrixXd normalize_rows(Eigen::MatrixXd &mat){
@@ -261,12 +258,12 @@ Eigen::MatrixXd normalize_rows(Eigen::MatrixXd &mat){
  *@param expon: power
  *@return: mat^expon
  */
-Eigen::MatrixXd matrix_power(Eigen::MatrixXd mat, int expon){
+Eigen::MatrixXd matrix_power(const Eigen::MatrixXd& mat, const int& expon){
     int n = mat.cols();
     Eigen::MatrixXcd v(n,n);
     Eigen::MatrixXcd lambda(1,n);
     bool success = eigen_problem(mat, v, lambda);
-    Eigen::MatrixXd res(n,n);
+
     if(success){
         Eigen::MatrixXcd D(n,n);
         for(int i = 0; i < n; i++){
