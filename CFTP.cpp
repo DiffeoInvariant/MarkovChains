@@ -71,12 +71,12 @@ double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2){
 
 double k_stationary_variation_distance(Eigen::MatrixXd trans, int k){
     const int matexp = 15;
-    Eigen::MatrixXd pi = (matPow(trans,matexp)).row(0);
+    Eigen::MatrixXd pi = (Markov::matrix_power(trans,matexp)).row(0);
     double distance;
     double max = 0;
     int cols = trans.cols();
     if(k > 1){
-        Eigen::MatrixXd mat = matPow(trans, k);
+        Eigen::MatrixXd mat = Markov::matrix_power(trans, k);
     }
     for(int i = 0; i < cols; i++){
             distance = variation_distance(trans.row(i),pi);
@@ -139,7 +139,7 @@ int voter_CFTP(Eigen::MatrixXd &mat){
     //set random seed
     random_device rd;
     //init Mersenne Twistor
-    mt19937 gen(rd());
+    minstd_rand gen(rd());
     // unif(0,1)
     uniform_real_distribution<> dis(0.0,1.0);
     while(not coalesced && colCount < max_cols){
@@ -180,13 +180,13 @@ int voter_CFTP(Eigen::MatrixXd &mat){
  * @param coalesced: has the chain coalesced?
  * @return : distribution
  */
-int iteratedVoterCFTP( std::mt19937 &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, Eigen::MatrixXd &temp, int &nStates, bool coalesced = false){
+int iteratedVoterCFTP( std::minstd_rand &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, Eigen::MatrixXd &temp, int &nStates, bool coalesced = false){
         //resize M
-        M.resize(nStates,1);
+        M.resize(nStates,15);
         //clear R
         R.clear();
     
-
+    int count = 0;//how many times have we iterated?
         for(int i = 0; i < nStates; i++){
             M(i,0) = i;
         }
@@ -230,7 +230,7 @@ std::valarray<int> sampleVoterCFTP(Eigen::MatrixXd &mat, int n){
     //set random seed
     random_device rd;
     //init Mersenne Twistor
-    mt19937 gen(rd());
+    minstd_rand gen(rd());
     // unif(0,1)
     uniform_real_distribution<> dis(0.0,1.0);
     

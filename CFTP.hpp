@@ -10,6 +10,7 @@
 #include<random>
 #include<algorithm>
 #include<type_traits>
+#include"MarkovChain.hpp"
 #include<mkl.h>
 using namespace std;
 typedef std::complex<double> CD;
@@ -19,21 +20,6 @@ typedef Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> MatrixXcd;
  */
 namespace Markov
 {
-/** template checks if object T has member _transition--NOT NECESSARY AS OF NOW. MAY DELETE
- *
- */
-    /*
-#define DEFINE_MEMBER_CHECKER(member) \
-    template<typename T, typename V = bool> \
-    struct has_ ## member : std::false_type{}; \
-    template<typename T> \
-    struct has_ ## member<T, typename enable_if< \
-    !is_same<decltype(declval<T>().member), void>::value, bool >::type > : true_type {};
-    
-#define HAS_MEMBER(C,member) \
-    has_ ## member<C>::value
-     */
-    
     
     /**
      * @author: Zane Jakobs
@@ -41,7 +27,7 @@ namespace Markov
      * @param _pow: power of matrix
      * @return: mat^_pow
      */
-    Eigen::MatrixXd small_mat_pow(Eigen::MatrixXd &mat, int _pow)
+    Eigen::MatrixXd small_mat_pow(Eigen::MatrixXd &mat, int _pow);
  
    
 //void *threadedMatPow(Eigen::MatrixXd &mat, int pow);
