@@ -28,8 +28,9 @@ namespace Markov {
         pair<default_random_engine, uniform_real_distribution<T> > par(gen, dis);
         return par;
     }
-
+    
     /**
+     *@brief returns array of n samples from U(0,1) distribution
      *@author: Zane Jakobs
      *@param T: type of sample (double, float, etc)
      *@param n: length of sample

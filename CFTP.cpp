@@ -3,8 +3,8 @@
 #define MKL_INT size_t
 #endif
 #include<iostream>
-#include "CFTP.hpp"
-#include <Eigen/Core>
+#include "CFTP.h"
+#include<Eigen/Core>
 #include<deque>
 #include<valarray>
 #include<random>
@@ -14,8 +14,6 @@
 using namespace std;
 using namespace Eigen;
 
-typedef std::complex<double> CD;
-typedef Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> MatrixXcd;
 namespace Markov{
 /**
  * @author: Zane Jakobs
@@ -23,7 +21,7 @@ namespace Markov{
  * @param _pow: power of matrix
  * @return: mat^_pow
  */
-Eigen::MatrixXd small_mat_pow(Eigen::MatrixXd &mat, int _pow){
+auto small_mat_pow(Eigen::MatrixXd &mat, int _pow){
     Eigen::MatrixXd limmat = mat;
     while(_pow > 0){
         if( _pow % 2 == 0){
@@ -44,14 +42,14 @@ Eigen::MatrixXd small_mat_pow(Eigen::MatrixXd &mat, int _pow){
   //  mat = mat.pow(_pow);
 //}
 //variation distance between two distributions
-double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2){
+auto variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2){
     int n = dist1.cols();
     int m = dist2.cols();
     int nr = dist1.rows();
     int mr = dist2.rows();
     
     if(n != m || nr != mr){
-        return -1;
+        return static_cast<double>(-1);
     }
     if(n == 1){
         dist1 = dist1.transpose();
@@ -69,9 +67,9 @@ double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2){
     return sum;
 }
 
-double k_stationary_variation_distance(Eigen::MatrixXd trans, int k){
-    const int matexp = 15;
-    Eigen::MatrixXd pi = (Markov::matrix_power(trans,matexp)).row(0);
+auto k_stationary_variation_distance(Eigen::MatrixXd trans, int k){
+    const unsigned matexp = 15;
+    auto pi = (Markov::matrix_power(trans,matexp)).row(0);
     double distance;
     double max = 0;
     int cols = trans.cols();
@@ -87,7 +85,7 @@ double k_stationary_variation_distance(Eigen::MatrixXd trans, int k){
     return max;
 }
 
-int mixing_time(Eigen::MatrixXd &trans){
+auto mixing_time(Eigen::MatrixXd &trans){
     const double tol = 0.36787944117144; // 1/e to double precision
     const int max_mix_time = 100; //after this time, we abandon our efforts, as it takes too long to mix
     for(int i = 1; i < max_mix_time; i++){
@@ -97,8 +95,8 @@ int mixing_time(Eigen::MatrixXd &trans){
     }
     return -1; //in case of failure
 }
-
-int isCoalesced(Eigen::MatrixXd &mat){
+//takes in matrix where elements are states in voter CFTP
+auto isCoalesced(Eigen::MatrixXd &mat){
     int ncols = mat.rows();
     int sample  = mat(0,0);
     for(int i = 1; i < ncols; i++){
@@ -108,24 +106,14 @@ int isCoalesced(Eigen::MatrixXd &mat){
     }
     return sample;
 }
-//taken from MarkovChain.cpp
-int random_transition(Eigen::MatrixXd &mat, int init_state, double r){
-    double s = mat(init_state,0);
-    int i = 0;
-    while(r > s && (i < mat.cols()-1)){
-        i++;
-        s += mat(init_state,i);
-    }
-    
-    return i;
-}
+   
 
 /**
  * @author: Zane Jakobs
  * @summary: voter CFTP algorithm to perfectly sample from the Markov chain with transition matrix mat. Algorithm from https://pdfs.semanticscholar.org/ef02/fd2d2b4d0a914eba5e4270be4161bcae8f81.pdf
  * @return: perfect sample from matrix's distribution
  */
-int voter_CFTP(Eigen::MatrixXd &mat){
+auto voter_CFTP(Eigen::MatrixXd &mat){
     int nStates = mat.cols();
     std::deque<double> R; //random samples
     int colCount = 1;
@@ -180,7 +168,7 @@ int voter_CFTP(Eigen::MatrixXd &mat){
  * @param coalesced: has the chain coalesced?
  * @return : distribution
  */
-int iteratedVoterCFTP( std::minstd_rand &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, Eigen::MatrixXd &temp, int &nStates, bool coalesced = false){
+auto iteratedVoterCFTP( std::minstd_rand &gen, std::uniform_real_distribution<> &dis, Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, Eigen::MatrixXd &temp, int &nStates, bool coalesced = false){
         //resize M
         M.resize(nStates,15);
         //clear R
@@ -252,7 +240,7 @@ std::valarray<int> sampleVoterCFTP(Eigen::MatrixXd &mat, int n){
  * @param n: how many samples
  * @return: VectorXd where i-th entry is the density of state i
  */
-Eigen::VectorXd voterCFTPDistribution(Eigen::MatrixXd &mat, int n){
+auto voterCFTPDistribution(Eigen::MatrixXd &mat, int n){
     std::valarray<int> counts = sampleVoterCFTP(mat, n);
     Eigen::VectorXd res(mat.cols());
     double sum = double(counts.sum());
