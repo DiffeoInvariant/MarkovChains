@@ -4,6 +4,7 @@
 #include<utility>
 #include<array>
 #include<vector>
+#include<random>
 #include<type_traits>
 /**
  NOTE FROM AUTHOR (ZANE JAKOBS):
@@ -299,6 +300,47 @@ namespace Markov {
         //constexpr auto Gaussian_IMH_min_point() noexcept;
 
     };
+    
+    
+    class Cauchy
+    {
+    protected:
+        double mu = 0.0;
+        double sigma = 1.0;
+    public:
+        const int n_param = 2;
+        
+        constexpr Cauchy(double m = 0.0, double s = 1.0){
+            mu = m;
+            sigma = s;
+        }
+        
+        constexpr void setMu(double _mu) noexcept;
+        
+        constexpr void setSigma(double _sigma) noexcept;
+        
+        constexpr double pdf(double x) const noexcept
+        {
+            double adjX = (x-mu)/sigma;
+            return 1.0/(M_PI*sigma* (1+adjX*adjX));
+        }
+        
+        double sample() const noexcept;
+        
+        /**
+         *@author: Zane Jakobs
+         *@return: vector of samples from a Cauchy distribution
+         */
+        vector<double> create_sample_vector(unsigned length) const noexcept;
+        
+        /**
+         *@author: Zane Jakobs
+         *@param additions: how many samples to push_back?
+         *@brief: vector with additions many new samples from a Cauchy(mu,sigma) distribution.
+         */
+        void update_sample_vector(vector<double>& sample_seq, unsigned additions) const noexcept;
+    };
+    
     
 }
 

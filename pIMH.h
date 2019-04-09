@@ -26,9 +26,9 @@ namespace Markov
         /*
          1.11 is default so we can check if it hasn't been initialized
          
-         Usually, best practices would be to use boost::optional<StateType>
+         Usually, best practices would be to use boost::optional<double>
         if you don't have C++17, or some of your program is old and
-         won't work with new std types, or std::optional<StateType>
+         won't work with new std types, or std::optional<double>
          if you're compiling with C++17 or later. For this class though, we're going
          to use a preset value to reduce overhead, since speed is everything
          in perfect sampling land.*/
@@ -43,6 +43,7 @@ namespace Markov
         
         constexpr auto MH_ratio(const double x, const double y) const noexcept
         {
+            //std::cout << pi.pdf(y) << " " << Q.pdf(x) << "\n";
             return (pi.pdf(y)*Q.pdf(x))/(pi.pdf(x)*Q.pdf(y));
         }
         
@@ -123,8 +124,11 @@ namespace Markov
                     
                     vlen += initial_len;
                 }
-                
-                auto threshold = accceptance_threshold(lower_bound, qvec[vlen - n + 1]);
+               // std::cout << "lb" << lower_bound << "\n";
+                //std::cout << "q" << qvec[vlen - n] << "\n";
+
+                auto threshold = accceptance_threshold(-lower_bound, qvec[vlen - n]);
+                //std::cout << threshold << "\n";
                 //if the first transition from time -n is accepted, we have converged
                 if(avec[vlen - n] < threshold){
                     accepted_first = true;
@@ -132,29 +136,10 @@ namespace Markov
                     n++;//if we reject the transition, move back one in time
                 }
             }//end while
-            
             auto sample = MH_from_past(n, qvec, avec);
             return sample;
         }
     };
-    
-        constexpr static auto find_ast_lower_bound(const AsymmetricStudentT& _pi) noexcept{
-        auto astar = _pi.getAStar();
-        auto scale = _pi.getScale();
-        //derivative of AST/N == 0 for AST having location = 0, scale = 1
-        if(astar < 0.5){
-            auto ltail =  _pi.getLTail();
-            auto k = _pi.K(ltail);
-            auto std_solution = sqrt(1 + ltail*( 1 - 4* astar * astar * scale * scale * k * k));
-            return (std_solution + _pi.getLocation());
-        } else{
-            auto rtail = _pi.getRTail();
-            auto k = _pi.K(rtail);
-            auto std_solution = sqrt(1 + rtail*(1 - 4 * (1-astar) * (1-astar) * k * k * scale * scale));
-            
-            return (std_solution + _pi.getLocation());
-        }
-    }
     
 }//end namespace scope
 #endif /* MetropolisHastings_hpp */

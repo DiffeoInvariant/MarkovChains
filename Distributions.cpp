@@ -1,7 +1,7 @@
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif
-//#include<mkl.h>//optimizations
+#include<mkl.h>//optimizations
 #include<random>
 #include<numeric>
 #include<type_traits>
@@ -9,7 +9,7 @@
 #include<utility>
 #include<array>
 #include<vector>
-#include "Distributions.h"
+#include "Distributions.h"  
 using namespace std;
 //using namespace Markov;
 namespace Markov {
@@ -387,8 +387,51 @@ namespace Markov {
         return static_cast<double>(2.0 * astar * inv_stdcdf_l + 2.0 * (1.0-astar)* inv_stdcdf_2);
     }
     
-    //minimum point wrt IMH order for gaussian candidate
-   // constexpr auto AsymmetricStudentT::Gaussian_IMH_min_point() noexcept{
-    //    return location;
+    constexpr void Cauchy::setMu(double _mu) noexcept{mu = _mu;}
+    
+    constexpr void Cauchy::setSigma(double s) noexcept{sigma = s;}
+    
+    //constexpr double Cauchy::pdf(double x)const noexcept{
+    //    double adjX = (x-mu)/sigma;
+   //     return 1.0/(M_PI*sigma* (1+adjX*adjX));
    // }
+    
+    double Cauchy::sample() const noexcept{
+        random_device rd;
+        default_random_engine gen(rd());
+        cauchy_distribution<double> dis(mu,sigma);
+        return dis(gen);
+    }
+    
+    /**
+     *@author: Zane Jakobs
+     *@return: vector of samples from a normal distribution
+     * TODO: TEMPLATIZE SAMPLE VECTOR CREATION
+     */
+    vector<double> Cauchy::create_sample_vector(unsigned length) const noexcept{
+        random_device rd;
+        default_random_engine gen(rd());
+        cauchy_distribution<double> dis(mu,sigma);
+        vector<double> vec(length);
+        for(auto &i : vec){
+            i = dis(gen);
+        }
+        return vec;
+    }
+    
+    /**
+     *@author: Zane Jakobs
+     *@param additions: how many samples to push_back?
+     *@brief: vector with additions many new samples from a Normal(mu,sigma) distribution.
+     */
+    void Cauchy::update_sample_vector(vector<double>& sample_seq, unsigned additions) const noexcept{
+        random_device rd;
+        default_random_engine gen(rd());
+        cauchy_distribution<double> dis(mu,sigma);
+        
+        for(unsigned i = 0; i < additions; i++){
+            sample_seq.push_back(dis(gen));
+        }
+    }
+    
 }
