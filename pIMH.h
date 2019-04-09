@@ -1,13 +1,13 @@
 #ifndef pIMH_hpp
 #define pIMH_hpp
-
+#include<mkl.h>
+#include<omp.h>
 #include <stdio.h>
 #include<random>
 #include<numeric>
 #include<vector>
 #include<array>
 #include<utility>
-#include "Distributions.h"
 
 using namespace std;
 namespace Markov
@@ -103,10 +103,10 @@ namespace Markov
          *@author: Zane Jakobs
          *@brief: runs the perfect IMH algorithm once
          */
-        auto perfect_IMH_sample(unsigned initial_len = 100) const noexcept
+        auto perfect_IMH_sample(unsigned initial_len, pair<default_random_engine, uniform_real_distribution<double> >& spar) const noexcept
         {
             
-            auto avec = Markov::uniform_sample_vector(initial_len, 0.0, 1.0);
+            auto avec = Markov::uniform_sample_vector(spar, initial_len);
             auto qvec = Q.create_sample_vector(initial_len);
             bool accepted_first = false;
             
@@ -119,12 +119,12 @@ namespace Markov
                 auto vlen = avec.size() - 1;
                 //update vectors if we hit the end of them
                 if(n == vlen){
-                    avec = Markov::update_uniform_sample_vector(avec, initial_len, 0.0, 1.0);
+                    avec = Markov::update_uniform_sample_vector(avec, spar, initial_len);
                     Q.update_sample_vector(qvec, initial_len);
                     
                     vlen += initial_len;
                 }
-               // std::cout << "lb" << lower_bound << "\n";
+                //std::cout << "lb" << lower_bound << "\n";
                 //std::cout << "q" << qvec[vlen - n] << "\n";
 
                 auto threshold = accceptance_threshold(-lower_bound, qvec[vlen - n]);
@@ -138,6 +138,21 @@ namespace Markov
             }//end while
             auto sample = MH_from_past(n, qvec, avec);
             return sample;
+        }
+        auto perfect_IMH_sample_vector(unsigned samples, unsigned initial_len = 100) const noexcept
+        {
+            auto sampler  = std_sampler_pair();
+            vector<double> sampleContainer(samples);
+            
+            
+           // #pragma omp parallel num_threads(4)
+            //{
+            //        #pragma omp for
+                for(int i = 0; i < samples; i++){
+                    sampleContainer[i] = perfect_IMH_sample(initial_len, sampler);
+                }
+           // }
+            return sampleContainer;
         }
     };
     
