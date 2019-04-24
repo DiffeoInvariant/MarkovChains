@@ -2,7 +2,7 @@
 #define pIMH_hpp
 #include<mkl.h>
 #include<omp.h>
-#include <stdio.h>
+#include<stdio.h>
 #include<random>
 #include<numeric>
 #include<vector>
@@ -88,12 +88,15 @@ namespace Markov
             //static_assert(vlen == avec.size());
             
             auto state = lower_bound;
+            //std::cout << "MHFP\n";
             for(int t = 0; t <= n; t++){
                 //compiler will optimize this to not declare a new one each loop
                 auto threshold = accceptance_threshold(state, qvec[vlen - n +t] );
-                
+                //std::cout << "q: " << qvec[vlen - n +t] << "\n";
+                //std::cout << "t: " << accceptance_threshold(lower_bound, qvec[vlen - n+t]) << "\n";
                 if(avec[vlen - n + t] < threshold){
                     state = qvec[vlen - n + t];
+                    //std::cout << "accepted\n";
                 }
             }//end for
             return state;
@@ -111,9 +114,7 @@ namespace Markov
             bool accepted_first = false;
             
             int n = 1;
-            /*
-             parallelize this loop!
-             */
+            // #pragma omp parallel
             while(!accepted_first){
                 //vlen is "time 0"
                 auto vlen = avec.size() - 1;
@@ -123,15 +124,17 @@ namespace Markov
                     Q.update_sample_vector(qvec, initial_len);
                     
                     vlen += initial_len;
-                }
-                //std::cout << "lb" << lower_bound << "\n";
-                //std::cout << "q" << qvec[vlen - n] << "\n";
-
-                auto threshold = accceptance_threshold(-lower_bound, qvec[vlen - n]);
-                //std::cout << threshold << "\n";
+                }/*
+                    std::cout << "Large n, printing qvec[vlen-n] \n";
+                    std::cout << qvec[vlen-n] << "\n";
+                    std::cout << "Printing acceptance_threshold\n";
+                    std::cout << accceptance_threshold(lower_bound, qvec[vlen - n]);*/
+                auto threshold = accceptance_threshold(lower_bound, qvec[vlen - n]);
+                
                 //if the first transition from time -n is accepted, we have converged
-                if(avec[vlen - n] < threshold){
+                if(avec[vlen - n] < threshold ){
                     accepted_first = true;
+                    //std::cout << n <<"\n";
                 } else{
                     n++;//if we reject the transition, move back one in time
                 }

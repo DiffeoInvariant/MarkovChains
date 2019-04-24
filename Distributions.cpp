@@ -1,6 +1,7 @@
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif
+/*
 #include<mkl.h>//optimizations
 #include<random>
 #include<numeric>
@@ -9,6 +10,8 @@
 #include<utility>
 #include<array>
 #include<vector>
+ */
+#include <cstdlib>
 #include "Distributions.h"  
 using namespace std;
 //using namespace Markov;
@@ -38,73 +41,23 @@ namespace Markov {
        // static_assert(is_arithmetic<T>::value, "Error: uniform_sample must take an arithmetic type");
         return spair.second(spair.first); //  return dis(gen)
     }
-    //array of length n containing samples
-    /*
-    template<typename T, size_t N>
-    array<T,N> uniform_sample_arr() noexcept
+    vector<double> uniform_sample_vector(pair<default_random_engine, uniform_real_distribution<double> >& spar, size_t length) noexcept
     {
-        static_assert(is_arithmetic<T>::value, "Error: uniform_sample_arr must take an arithmetic type");
-        auto ed_pair = std_sampler_pair();
-        array<T,N> arr;
-        for(auto &i : arr){
-            i = uniform_sample(ed_pair);
-        }
-        return arr;
-    }*/
-    
-    
-    /**
-     *@author: Zane Jakobs
-     *@return: length-many samples from a U(lower, upper) distribution.
-     */
-    /*
-    template<typename T>
-    vector<T> uniform_sample_vector(size_t length, T lower, T upper) noexcept
-    {
-        static_assert(is_arithmetic<T>::value, "Error: uniform_sample_vector must take an arithmetic type");
-        default_random_engine gen;
-        uniform_real_distribution<T> dis(lower,upper);
-        vector<T> vec(length, 0.0);
+        vector<double> vec(length, 0.0);
         for(auto &i : vec){
-            i = dis(gen);
+            i = spar.second(spar.first);
         }
         return vec;
     }
-    */
-    /**
-     *@author: Zane Jakobs
-     *@brief: vector with additions-many more samples from a U(lower, upper) distribution.
-     */
-    /*
-    template<typename T>
-    void update_uniform_sample_vector(vector<T>& sample_seq, unsigned additions, T lower, T upper) noexcept{
-        default_random_engine gen;
-        uniform_real_distribution<T> dis(lower,upper);
+    
+    vector<double> update_uniform_sample_vector(vector<double>& sample_seq, pair<default_random_engine, uniform_real_distribution<double> >& spar, unsigned additions) noexcept
+    {
         for(unsigned i = 0; i < additions; i++){
-            sample_seq.insert(sample_seq.front(), dis(gen));
+            auto it = sample_seq.begin();
+            sample_seq.insert(it, spar.second(spar.first));
         }
         return sample_seq;
     }
-*/
-    //returns array of n independent samples from distribution
-    //by taking F^{-1}(x), x ~ Unif(0,1)
-    /**
-     *@author: Zane Jakobs
-     *@param inv_cdf: inverse CDF function
-     *@preconditon: iCDfunc must return double, or a type that can be implicitly converted
-     * to double
-     */
-    /*
-    template<typename inv_cdf, std::size_t N>
-    constexpr array<double, N> sample_arr_ind(inv_cdf&& iCDfunc) noexcept
-    {
-        auto unif_arr = uniform_sample_arr<double,N>();
-        for(auto &i : unif_arr){
-            i = iCDfunc(i);
-        }
-        return unif_arr;
-    }*/
-    
 
     constexpr double Poisson::getLambda() noexcept{
             return lambda;
@@ -241,7 +194,7 @@ namespace Markov {
         return beta;
     }
     
-    double Gamma::pdf(double x) noexcept{
+    const double Gamma::pdf(double x) const noexcept{
         return (pow(x,alpha - 1)*pow(M_E, -x/beta)/(tgamma(alpha)*pow(beta,alpha)));
     }
     constexpr double Gamma::mean() noexcept{
@@ -400,7 +353,7 @@ namespace Markov {
         random_device rd;
         default_random_engine gen(rd());
         cauchy_distribution<double> dis(mu,sigma);
-        return dis(gen);
+        return abv ? abs(dis(gen)) : dis(gen);
     }
     
     /**
@@ -414,7 +367,7 @@ namespace Markov {
         cauchy_distribution<double> dis(mu,sigma);
         vector<double> vec(length);
         for(auto &i : vec){
-            i = dis(gen);
+            i = abv ? abs(dis(gen)) : dis(gen);
         }
         return vec;
     }
@@ -430,8 +383,10 @@ namespace Markov {
         cauchy_distribution<double> dis(mu,sigma);
         
         for(unsigned i = 0; i < additions; i++){
-            sample_seq.push_back(dis(gen));
+            auto spl = abv ? abs(dis(gen)) : dis(gen);
+            sample_seq.push_back(spl);
         }
     }
     
 }
+

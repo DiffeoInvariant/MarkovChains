@@ -5,6 +5,8 @@
 #include<array>
 #include<vector>
 #include<random>
+#include<array>
+#include<gsl/gsl_cdf.h>
 #include<type_traits>
 /**
  NOTE FROM AUTHOR (ZANE JAKOBS):
@@ -26,7 +28,7 @@ namespace Markov {
      */
     pair<default_random_engine, uniform_real_distribution<double> > std_sampler_pair() noexcept;
     
-
+    
     double uniform_sample(pair<default_random_engine, uniform_real_distribution<double> >& spair) noexcept;
     /**
      *@brief returns array of n samples from U(0,1) distribution
@@ -35,8 +37,6 @@ namespace Markov {
      *@param n: length of sample
      *@return: array of n samples from uniform(0,1) distribution
      */
-   // template<typename T, size_t N>
-   // array<T,N> uniform_sample_arr() noexcept;
     template<typename T, size_t N>
     array<T,N> uniform_sample_arr() noexcept
     {
@@ -55,37 +55,13 @@ namespace Markov {
      */
    // template<typename T>
    // vector<T> uniform_sample_vector(size_t length, T lower, T upper) noexcept;
-    template<typename T>
-    vector<T> uniform_sample_vector(size_t length, T lower, T upper) noexcept
-    {
-        static_assert(is_arithmetic<T>::value, "Error: uniform_sample_vector must take an arithmetic type");
-        random_device rd;
-        default_random_engine gen(rd());
-        uniform_real_distribution<T> dis(lower,upper);
-        vector<T> vec(length, 0.0);
-        for(auto &i : vec){
-            i = dis(gen);
-        }
-        return vec;
-    }
+    vector<double> uniform_sample_vector(pair<default_random_engine, uniform_real_distribution<double> >& spar, size_t length) noexcept;
     
     /**
      *@author: Zane Jakobs
      *@brief: vector with additions-many more samples from a U(lower, upper) distribution.
      */
-   // template<typename T>
-    //void update_uniform_sample_vector(vector<T>& sample_seq, unsigned additions, T lower, T upper) noexcept;
-    template<typename T>
-    auto update_uniform_sample_vector(vector<T>& sample_seq, unsigned additions, T lower, T upper) noexcept{
-        random_device rd;
-        default_random_engine gen(rd());
-        uniform_real_distribution<T> dis(lower,upper);
-        for(unsigned i = 0; i < additions; i++){
-            auto it = sample_seq.begin();
-            sample_seq.insert(it, dis(gen));
-        }
-        return sample_seq;
-    }
+    vector<double> update_uniform_sample_vector(vector<double>& sample_seq, pair<default_random_engine, uniform_real_distribution<double> >& spar, unsigned additions) noexcept;
     /**
      *@author: Zane Jakobs
      *@param inv_cdf: inverse CDF function
@@ -224,7 +200,7 @@ namespace Markov {
         
         constexpr double getBeta() noexcept;
         
-        double pdf(double x) noexcept;
+        const double pdf(double x) const noexcept;
         
         constexpr double mean() noexcept;
         
@@ -307,12 +283,18 @@ namespace Markov {
     protected:
         double mu = 0.0;
         double sigma = 1.0;
+        bool abv = false;//if true, samples return absolute value
     public:
         const int n_param = 2;
         
-        constexpr Cauchy(double m = 0.0, double s = 1.0){
+        constexpr Cauchy(double m, double s){
             mu = m;
             sigma = s;
+        }
+        constexpr Cauchy(double m, double s, bool aval){
+            mu = m;
+            sigma = s;
+            abv = aval;
         }
         
         constexpr void setMu(double _mu) noexcept;
