@@ -151,14 +151,32 @@ namespace Markov
         return P()(std::forward<T>(x));
     }
     
+    /**
+     * @name MarkovChain::randTransition
+     * @summary: initialRand: generates random state
+     * @param matrix: transition matrix
+     * @param index: current state
+     * @param u: random uniform between 0 and 1
+     * @return index corresponding to the transition we make
+     */
+    constexpr int random_transition(const Eigen::MatrixXd &mat, int nStates, int init_state, double r) noexcept{
+        auto s = mat(init_state,0);
+        int i = 0;
+        while(r > s && (i < nStates)){
+            i++;
+            s += mat(init_state,i);
+        }
+        
+        return i;
+    }
     
     /**
      * Taken from https://software.intel.com/en-us/node/521147
      * @summary: C++ declaration of FORTRAN function dgeev
      *
      */
-    extern "C" lapack_int LAPACKE_dgeev( int matrix_layout, char jobvl, char jobvr, lapack_int n, double* a, lapack_int lda, double* wr, double* wi, double* vl, lapack_int ldvl, double* vr, lapack_int ldvr );
-    
+    extern "C" { lapack_int LAPACKE_dgeev( int matrix_layout, char jobvl, char jobvr, lapack_int n, double* a, lapack_int lda, double* wr, double* wi, double* vl, lapack_int ldvl, double* vr, lapack_int ldvr );
+    }
     
     /**
      * @author: Zane Jakobs
@@ -353,25 +371,6 @@ namespace Markov
             res = x;
         }
         return res.real();
-    }
-    
-    /**
-     * @name MarkovChain::randTransition
-     * @summary: initialRand: generates random state
-     * @param matrix: transition matrix
-     * @param index: current state
-     * @param u: random uniform between 0 and 1
-     * @return index corresponding to the transition we make
-     */
-    constexpr int random_transition(const Eigen::MatrixXd &mat, int nStates, int init_state, double r) noexcept{
-        auto s = mat(init_state,0);
-        int i = 0;
-        while(r > s && (i < nStates)){
-            i++;
-            s += mat(init_state,i);
-        }
-        
-        return i;
     }
     
     /**

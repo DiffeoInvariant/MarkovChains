@@ -1,6 +1,6 @@
 #ifndef EIGEN_USE_MKL_ALL
 #define EIGEN_USE_MKL_ALL
-#define MKL_INT size_t
+//#define MKL_INT size_t
 #endif
 #include<iostream>
 #include<cstdio>
@@ -19,7 +19,7 @@
 #include "../include/MarkovFunctions.h"
 using namespace std;
 using namespace Eigen;
-
+using namespace Markov;
 namespace Markov{
 /**
  * @author: Zane Jakobs
@@ -77,7 +77,7 @@ double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2){
             distributions of the rows of trans^K and a very good proxy of
             the stationary distribution
  */
-decltype(auto) k_stationary_variation_distance(Eigen::MatrixXd trans, int k){
+double k_stationary_variation_distance(Eigen::MatrixXd trans, int k){
     const unsigned matexp = 20;
     auto pi = (Markov::matrix_power(trans,matexp)).row(0);
     double distance;
@@ -95,7 +95,7 @@ decltype(auto) k_stationary_variation_distance(Eigen::MatrixXd trans, int k){
     return max;
 }
 
-decltype(auto) mixing_time(const Eigen::MatrixXd &trans){
+int mixing_time(const Eigen::MatrixXd &trans){
     const double tol = 0.36787944117144; // 1/e to double precision
     const int max_mix_time = 100; //after this time, we abandon our efforts, as it takes too long to mix
     for(int i = 1; i < max_mix_time; i++){
@@ -123,7 +123,7 @@ int isCoalesced(const Eigen::MatrixXd &mat){
  * @summary: voter CFTP algorithm to perfectly sample from the Markov chain with transition matrix mat. Algorithm from https://pdfs.semanticscholar.org/ef02/fd2d2b4d0a914eba5e4270be4161bcae8f81.pdf
  * @return: perfect sample from matrix's distribution
  */
-decltype(auto) voter_CFTP(Eigen::MatrixXd &mat){
+int voter_CFTP(const Eigen::MatrixXd &mat){
     
     int nStates = mat.cols();
     
@@ -186,7 +186,10 @@ decltype(auto) voter_CFTP(Eigen::MatrixXd &mat){
  * @param coalesced: has the chain coalesced?
  * @return: distribution
  */
-decltype(auto) iteratedVoterCFTP(std::minstd_rand &gen, std::uniform_real_distribution<> &dis,const Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, Eigen::MatrixXd &temp, const int &nStates, bool coalesced = false){
+int iteratedVoterCFTP(std::mt19937 &gen, std::uniform_real_distribution<> &dis,
+                      const Eigen::MatrixXd &mat, std::deque<double> &R,
+                      Eigen::MatrixXd &M, Eigen::MatrixXd &temp, const int &nStates,
+                      bool coalesced = false){
         //resize M
         M.resize(nStates,15);
         //clear R
@@ -236,7 +239,7 @@ std::valarray<int> sampleVoterCFTP(const Eigen::MatrixXd &mat, int n){
     //set random seed
     random_device rd;
     //init Mersenne Twistor
-    minstd_rand gen(rd());
+    mt19937 gen(rd());
     // unif(0,1)
     uniform_real_distribution<> dis(0.0,1.0);
     
@@ -258,7 +261,7 @@ std::valarray<int> sampleVoterCFTP(const Eigen::MatrixXd &mat, int n){
  * @param n: how many samples
  * @return: VectorXd where i-th entry is the density of state i
  */
-decltype(auto) voterCFTPDistribution(Eigen::MatrixXd &mat, int n){
+    Eigen::VectorXd voterCFTPDistribution(const Eigen::MatrixXd &mat, int n){
     std::valarray<int> counts = sampleVoterCFTP(mat, n);
     Eigen::VectorXd res(mat.cols());
     double sum = double(counts.sum());
