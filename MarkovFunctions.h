@@ -120,7 +120,16 @@ namespace Markov
      * @param u: random uniform between 0 and 1
      * @return index corresponding to the transition we make
      */
-    constexpr int random_transition(const Eigen::MatrixXd &mat, int nStates, int init_state, double r) noexcept;
+    constexpr int random_transition(const Eigen::MatrixXd &mat, int nStates, int init_state, double r) noexcept{
+        auto s = mat(init_state,0);
+        int i = 0;
+        while(r > s && (i < nStates)){
+            i++;
+            s += mat(init_state,i);
+        }
+        
+        return i;
+    }
     /**
      * @name MarkovChain::generate_mc_sequence
      * @summary: generateSequence generates a sequence of length n from the Markov chain
