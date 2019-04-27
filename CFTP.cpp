@@ -4,7 +4,10 @@
 #endif
 #include<iostream>
 #include<cstdio>
-#include "CFTP.h"
+#include "../include/CFTP.h"
+#ifdef Success
+    #undef Success
+#endif
 #include<Eigen/Core>
 #include<deque>
 #include<valarray>
@@ -13,7 +16,7 @@
 #include<mkl.h>
 #include<complex>
 #include<utility>
-#include "MarkovFunctions.h"
+#include "../include/MarkovFunctions.h"
 using namespace std;
 using namespace Eigen;
 
@@ -44,7 +47,7 @@ namespace Markov{
         because we don't want to modify the distributions, but we need to copy them to
         do that, and pass-by-val is the most efficient way
  */
-decltype(auto) variation_distance(Eigen::MatrixXd, dist1, Eigen::MatrixXd dist2){
+double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2){
     int n = dist1.cols();
     int m = dist2.cols();
     int nr = dist1.rows();
@@ -61,7 +64,7 @@ decltype(auto) variation_distance(Eigen::MatrixXd, dist1, Eigen::MatrixXd dist2)
     }
     double sum = 0;
 
-    (n == 1) ? auto k  = nr : auto k = n; //length of distribution.
+   auto k  = (n == 1) ?  nr : n; //length of distribution.
     for(int i = 0; i < k; i++){
         sum += std::abs(dist1(0,i) - dist2(0,i));
     }
@@ -81,7 +84,7 @@ decltype(auto) k_stationary_variation_distance(Eigen::MatrixXd trans, int k){
     double max = 0;
     int cols = trans.cols();
     if(k > 1){
-        trans = std::move(Markov::matrix_power(trans, k));
+        trans = Markov::matrix_power(trans, k);
     }
     for(int i = 0; i < cols; i++){
             distance = variation_distance(trans.row(i),pi);
@@ -103,7 +106,7 @@ decltype(auto) mixing_time(const Eigen::MatrixXd &trans){
     return -1; //in case of failure
 }
 //takes in matrix where elements are states in voter CFTP
-decltype(auto) isCoalesced(const Eigen::MatrixXd &mat){
+int isCoalesced(const Eigen::MatrixXd &mat){
     int nrows = mat.rows();
     int sample  = mat(0,0);
     for(int i = 1; i < nrows; i++){
@@ -183,13 +186,13 @@ decltype(auto) voter_CFTP(Eigen::MatrixXd &mat){
  * @param coalesced: has the chain coalesced?
  * @return: distribution
  */
-decltype(auto) iteratedVoterCFTP( const std::minstd_rand &gen, const std::uniform_real_distribution<> &dis,const Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, Eigen::MatrixXd &temp, const int &nStates, bool coalesced = false){
+decltype(auto) iteratedVoterCFTP(std::minstd_rand &gen, std::uniform_real_distribution<> &dis,const Eigen::MatrixXd &mat, std::deque<double> &R, Eigen::MatrixXd &M, Eigen::MatrixXd &temp, const int &nStates, bool coalesced = false){
         //resize M
         M.resize(nStates,15);
         //clear R
         R.clear();
     
-    int count = 0;//how many times have we iterated?
+    //int count = 0;//how many times have we iterated?
         for(int i = 0; i < nStates; i++){
             M(i,0) = i;
         }

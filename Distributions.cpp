@@ -1,18 +1,8 @@
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif
-/*
-#include<mkl.h>//optimizations
-#include<random>
-#include<numeric>
-#include<type_traits>
-#include<gsl/gsl_cdf.h>
-#include<utility>
-#include<array>
-#include<vector>
- */
 #include <cstdlib>
-#include "Distributions.h"  
+#include "../include/Distributions.h"  
 using namespace std;
 //using namespace Markov;
 namespace Markov {

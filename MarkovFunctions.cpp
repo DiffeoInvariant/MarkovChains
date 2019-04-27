@@ -3,6 +3,9 @@
 #define MarkovFunctions_hpp
 #include<mkl.h>
 #include<vector>
+#ifdef Success
+#undef Success
+#endif
 #include<Eigen/Core>
 #include<random>
 #include<iostream>
@@ -13,7 +16,7 @@
 #include<Eigen/LU>
 #include<utility>
 #include<type_traits>
-#include "MarkovFunctions.h"
+#include "../include/MarkovFunctions.h"
 using namespace std;
 using namespace Eigen;
 namespace Markov
@@ -32,7 +35,7 @@ namespace Markov
     }
     
     template<class T, class UnaryOp>
-    constexpr auto make_mapply_pair(T obj, UnaryOp fun)
+    constexpr decltype(auto) make_mapply_pair(T obj, UnaryOp fun) noexcept
     {
         std::pair<T, UnaryOp> mpair(obj, fun);
         return mpair;
@@ -157,10 +160,6 @@ namespace Markov
     extern "C" lapack_int LAPACKE_dgeev( int matrix_layout, char jobvl, char jobvr, lapack_int n, double* a, lapack_int lda, double* wr, double* wi, double* vl, lapack_int ldvl, double* vr, lapack_int ldvr );
     
     
-    typedef std::complex<double> CD;
-    
-    typedef Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> MatrixXcd;
-    
     /**
      * @author: Zane Jakobs
      * @param mat: matrix to convert to LAPACKE form
@@ -196,14 +195,14 @@ namespace Markov
             j = 0;
             while( j < n){
                 if(wi[j] == 0.0){
-                    CD temp(v[i + j*ldv],0.0);
+                    complex<double> temp(v[i + j*ldv],0.0);
                     mat(i,j) = temp;
                     j++;
                 }
                 else{
-                    CD temp(v[i + j*ldv],v[i+(j+1)*ldv]);
+                    complex<double> temp(v[i + j*ldv],v[i+(j+1)*ldv]);
                     mat(i,j) = temp;
-                    CD temp2(v[i + j*ldv], -v[i+(j+1)*ldv]);
+                    complex<double> temp2(v[i + j*ldv], -v[i+(j+1)*ldv]);
                     mat(i,j+1) = temp2;
                     j+=2;
                 }
@@ -219,7 +218,7 @@ namespace Markov
     Eigen::MatrixXcd LAPACKE_eval_to_Eigen(MKL_INT n, double* wr, double* wi){
         Eigen::MatrixXcd eval(1,n);
         for(MKL_INT j = 0; j < n; j++){
-            CD temp(wr[j],wi[j]);
+            complex<double> temp(wr[j],wi[j]);
             eval(0,j) = temp;
         }
         return eval;
@@ -234,7 +233,7 @@ namespace Markov
      * @param lambda: 1xn matrix (row vector)
      * @return: true for success, false for failure
      */
-    bool eigen_problem(Eigen::MatrixXd& A, MatrixXcd& v,
+    bool eigen_problem(const Eigen::MatrixXd& A, MatrixXcd& v,
                        MatrixXcd& lambda){
         //matrices in column major order (eigen default), compute right e-vecs
         //only
@@ -272,7 +271,7 @@ namespace Markov
      *@param expon: power
      *@return: mat^expon
      */
-    Eigen::MatrixXd matrix_power(Eigen::MatrixXd& mat, const int& expon){
+    Eigen::MatrixXd matrix_power(const Eigen::MatrixXd& mat, const int& expon){
         auto n = mat.cols();
         Eigen::MatrixXcd v(n,n);
         Eigen::MatrixXcd lambda(1,n);
@@ -299,7 +298,7 @@ namespace Markov
      * @return: P(x) = (x-lambda_1)*(x-lambda_2)*...*(x-lambda_n)
      */
     template<typename M>
-    auto characteristic_polynomial(Eigen::MatrixXd &mat, M &x){
+    M characteristic_polynomial(Eigen::MatrixXd &mat, M &x){
         auto n = mat.cols();
         Eigen::MatrixXcd v(n,n);
         Eigen::MatrixXcd lambda(1,n);
@@ -317,7 +316,7 @@ namespace Markov
     }
     //specialization for MatrixXcd
     template<>
-    auto characteristic_polynomial<Eigen::MatrixXcd>(Eigen::MatrixXd &mat, Eigen::MatrixXcd &x){
+    MatrixXcd characteristic_polynomial<Eigen::MatrixXcd>(Eigen::MatrixXd &mat, Eigen::MatrixXcd &x){
         auto n = mat.cols();
         Eigen::MatrixXcd v(n,n);
         Eigen::MatrixXcd lambda(1,n);
@@ -336,7 +335,7 @@ namespace Markov
     }
     //specialization for MatrixXd
     template<>
-    auto characteristic_polynomial<Eigen::MatrixXd>(Eigen::MatrixXd &mat, Eigen::MatrixXd &x){
+    MatrixXd characteristic_polynomial<Eigen::MatrixXd>(Eigen::MatrixXd &mat, Eigen::MatrixXd &x){
         auto n = mat.cols();
         Eigen::MatrixXcd v(n,n);
         Eigen::MatrixXcd lambda(1,n);
@@ -364,7 +363,7 @@ namespace Markov
      * @param u: random uniform between 0 and 1
      * @return index corresponding to the transition we make
      */
-    constexpr auto random_transition(const Eigen::MatrixXd &mat, int nStates, int init_state, double r) noexcept{
+    constexpr int random_transition(const Eigen::MatrixXd &mat, int nStates, int init_state, double r) noexcept{
         auto s = mat(init_state,0);
         int i = 0;
         while(r > s && (i < nStates)){
@@ -383,8 +382,8 @@ namespace Markov
      * @param initialDist: initial distribution
      * @return: vector of ints representing the sequence
      */
-    auto generate_mc_sequence(int n, const Eigen::MatrixXd& matT, const Eigen::MatrixXd& initialDist) noexcept{
-        
+    vector<int> generate_mc_sequence(int n, const Eigen::MatrixXd& matT, const Eigen::MatrixXd& initialDist) noexcept{
+        unsigned numStates = matT.cols();
         std::vector<int> sequence(n);
         int i = 0;
         int id = 0;

@@ -8,7 +8,10 @@
 #endif
 #ifndef MarkovChain_hpp
 #define MarkovChain_hpp
-
+#ifdef Success
+#undef Success
+#endif
+#include"../include/MarkovChain.h"
 #include<vector>
 #include<Eigen/Core>
 #include<Eigen/Eigenvalues>
@@ -21,8 +24,7 @@
 #include<mkl.h>
 #include<type_traits>
 #include<complex>
-#include"MarkovFunctions.hpp"
-#include"MarkovChain.hpp"
+#include"../include/MarkovFunctions.h"
 using namespace std;
 using namespace Markov;
 namespace Markov
@@ -36,18 +38,18 @@ namespace Markov
          * @source: https://www.codeproject.com/Articles/808292/Markov-chain-implementation-in-Cplusplus-using-Eig
          */
         
-    void MarkovChain::setModel( Eigen::MatrixXd& transition, Eigen::MatrixXd& initial, int _numStates){
+    void MarkovChain::setModel( const Eigen::MatrixXd& transition, const Eigen::MatrixXd& initial, int _numStates){
             _transition = transition;
             _initial = initial;
             numStates = _numStates;
         }
         
-        void MarkovChain::setTransition(Eigen::MatrixXd& transition){
+        void MarkovChain::setTransition(const Eigen::MatrixXd& transition){
             _transition = transition;
             numStates = transition.cols();
         }
         
-        void MarkovChain::setInitial(Eigen::MatrixXd& initial){
+        void MarkovChain::setInitial(const Eigen::MatrixXd& initial){
             _initial = initial;
         }
         void MarkovChain::setNumStates(int _num){
@@ -58,26 +60,26 @@ namespace Markov
         Eigen::MatrixXd MarkovChain::getInit() const { return _initial; }
         int MarkovChain::getNumStates(void) const {return numStates;}
     
-        
+
+    
         /**
          * @author: Zane Jakobs
-         * @summary: counts transitions
+         * @summary: computes transition matrix based on empirical distribution of values. In
+         * particular, attempts to find which entries should be zero
          * @param dat: the data
          * @param oversize: upper bound on the number of states in the chain
-         * @return: estimate of transition matrix, with zero entries where they should be to
-         * preserve communicating classes
+         * @return: maximum likelihood estimator of _transition
          */
-        static auto MarkovChain::countMat(vector<Sequence> df, int oversize = 100)
-        {
+    Eigen::MatrixXd MarkovChain::MLE(const vector<Sequence>& df, int oversize){
             Eigen::MatrixXd mat = Eigen::MatrixXd::Zero(oversize,oversize);
             
             //loop through data, entering values
             int largest = 0; //number of unique states
-            for(auto it = df.begin(); it != df.end(); it++){
-                for(auto jt = (*it).seq.begin(); jt++ != (*it).seq.end(); jt++){
+        for(const auto &it : df){
+            for(const auto &jt : it.seq){
                     auto pos = jt;
-                    int s1 = *pos;
-                    int s2 = *(pos++);
+                    int s1 = pos;
+                    int s2 = pos++;
                     mat(s1,s2) = mat(s1,s2) +1;
                     if(s1 > largest || s2 > largest){
                         s1 > s2 ? largest = s1 : largest = s2;
@@ -92,19 +94,6 @@ namespace Markov
             mat = normalize_rows(mat);
             return mat;
         }
-        /**
-         * @author: Zane Jakobs
-         * @summary: computes transition matrix based on empirical distribution of values. In
-         * particular, attempts to find which entries should be zero
-         * @param dat: the data
-         * @param oversize: upper bound on the number of states in the chain
-         * @return: maximum likelihood estimator of _transition
-         */
-        static auto MarkovChain::MLE(vector<Sequence> df, int oversize = 100){
-            Eigen::MatrixXd mat = countMat(df, oversize);
-            mat = normalize_rows(mat);
-            return mat;
-        }
         
         
         /**
@@ -113,7 +102,7 @@ namespace Markov
          * @param n: length of sequence
          * @return: vector of ints representing the sequence
          */
-        auto MarkovChain::generateSequence(int n){
+        vector<int> MarkovChain::generateSequence(int n) const noexcept{
             return generate_mc_sequence(n, _transition, _initial);
         }
         
@@ -123,7 +112,7 @@ namespace Markov
          * Markov Chain.
          * @return: vector of doubles corresponding to the last stationary distribution (by order of the eigenvalues)
          */
-        Eigen::MatrixXcd MarkovChain::stationaryDistributions(){
+        Eigen::MatrixXcd MarkovChain::stationaryDistributions() const{
             //instantiate eigensolver
             Eigen::EigenSolver<Eigen::MatrixXd> es;
             //transpose transition matrix to find left eigenvectors
@@ -156,7 +145,7 @@ namespace Markov
          * @param expon: computes 10^expon powers of _transition
          * @return limmat.row(0): limiting distribution
          */
-        Eigen::MatrixXd MarkovChain::limitingDistribution(int expon){
+        Eigen::MatrixXd MarkovChain::limitingDistribution(int expon) const{
             Eigen::MatrixXd limmat;
             limmat = matrix_power(_transition, expon);
             return limmat.row(0);
@@ -168,7 +157,7 @@ namespace Markov
          * @param expon: computes 10^expon powers of _transition
          * @return limmat: limiting distribution matrix
          */
-        Eigen::MatrixXd MarkovChain::limitingMat(int expon){
+        Eigen::MatrixXd MarkovChain::limitingMat(int expon) const{
             Eigen::MatrixXd limmat;
             limmat = matrix_power(_transition, expon);
             return limmat;
@@ -178,8 +167,11 @@ namespace Markov
          * @summary: does mat contain key?
          * @return: answer to above question, true or false for yes or no
          */
-        bool MarkovChain::contains(Eigen::MatrixXd mat, double key){
+        bool MarkovChain::contains(const Eigen::MatrixXd& mat, double key) const noexcept{
             auto n = mat.cols();
+            
+            if( n < 1 ){ return false;}
+            
             for(int i = 0; i<n; i++){
                 for(int j = 0; j < n; j++){
                     if(mat(i,j) == key)  return true;
@@ -191,7 +183,7 @@ namespace Markov
          * @author: Zane Jakobs
          * @return: matrix of number of paths of length n from state i to state j
          */
-        Eigen::MatrixXd MarkovChain::numPaths(int n){
+        Eigen::MatrixXd MarkovChain::numPaths(int n) const{
             Eigen::MatrixXd logicMat(numStates,numStates);
             for(int i = 0; i< numStates; i++){
                 for(int j = 0; j < numStates; j++){
@@ -216,7 +208,7 @@ namespace Markov
          * @author: Zane Jakobs
          * @return 1 or 0 for if state j can be reached from state i
          */
-        auto MarkovChain::isReachable(){
+    Eigen::MatrixXd MarkovChain::isReachable() const{
             Eigen::MatrixXd R(numStates,numStates);
             Eigen::MatrixXd Rcomp = Eigen::MatrixXd::Zero(numStates,numStates);
             Eigen::MatrixXd temp(numStates, numStates);
@@ -239,7 +231,7 @@ namespace Markov
         }
         
         template<typename T>
-        constexpr bool MarkovChain::isInVec(std::vector<T> v, T key){
+        constexpr bool MarkovChain::isInVec(const std::vector<T>& v, T key){
             for(auto it = v.begin(); it != v.end(); it++){
                 if( *it == key){
                     return true;
@@ -251,7 +243,7 @@ namespace Markov
          * @author: Zane Jakobs
          * @return matrix where each row has a 1 in the column of each element in that communicating class (one row = one class)
          */
-        Eigen::MatrixXd MarkovChain::communicatingClasses(){
+        Eigen::MatrixXd MarkovChain::communicatingClasses() const{
             Eigen::MatrixXd CC(numStates,numStates);
             Eigen::MatrixXd reachable = isReachable();
             
@@ -311,7 +303,7 @@ namespace Markov
          * @param s0: initial state
          * @param sh: target state
          */
-        auto MarkovChain::expectedHittingTime(int s0, int sh){
+        double MarkovChain::expectedHittingTime(int s0, int sh) const{
             /*
              Algorithm: let u_i = E[T|X_0 = i]. Set up system of equations. Solve for u_s0. We have the equation Au = c, where u = (u_0, u_1, ..., u_n)^T, c = (-1,-1,...,0,-1,...-1)^T, with 0 in the spot corresponding to sh, and
              
@@ -388,7 +380,7 @@ namespace Markov
          * @param sEnd: end state
          * @return: mean time the chain spends in sInt, starting at s0, before returning to s0
          */
-        auto MarkovChain::meanTimeInStateBeforeReturn(int s0, int sInt){
+        double MarkovChain::meanTimeInStateBeforeReturn(int s0, int sInt) const{
             /*
              Algorithm: We want to solve Aw = c, where c = (0,0,...,-1,0,...,0)^T, with the -1 in the sInt position, and w = (w0, w1, ..., wsInt, ... ,wn)^T. We want ws0. We also define
              
@@ -456,7 +448,7 @@ namespace Markov
          * @param sEnd: end state
          * @return: mean time the chain spends in sInt, starting at s0, before hitting sEnd
          */
-        auto MarkovChain::meanTimeInStateBeforeHit(int s0, int sInt, int sEnd){
+        double MarkovChain::meanTimeInStateBeforeHit(int s0, int sInt, int sEnd) const{
             /*
              Algorithm: We want to solve Aw = c, where c = (0,0,...,-1,0,...,0)^T, with the -1 in the sInt position, and w = (w0, w1, ..., wsInt, ... ,wn)^T. We want ws0. We also define
              
@@ -532,7 +524,7 @@ namespace Markov
          * @param t: time difference
          * @return: cov(X_s,X_{s+t}), taken from HMM for Time Series: an Intro Using R page 18
          */
-        auto MarkovChain::cov(int t){
+        double MarkovChain::cov(int t) const{
             const auto expon = 15;
             Eigen::MatrixXd pi = limitingDistribution(expon);
             Eigen::MatrixXd V = Eigen::MatrixXd::Zero(numStates,numStates);
@@ -561,13 +553,16 @@ namespace Markov
          * @param t: time difference
          * @return: corr(X_s,X_{s+t}), taken from HMM for Time Series: an Intro Using R page 18
          */
-        auto corr(int t){
-            auto correlation = cov(t)/cov(0);
+    double MarkovChain::corr(int t) const{
+            auto correlation = MarkovChain::cov(t)/MarkovChain::cov(0);
             return correlation;
         }
-        
-        auto log_likelihood(vector<Sequence> df, int oversize = 100){
-            auto f = countMat(df, oversize);
+    /**
+    *@author Zane Jakobs
+    *@return log likelihood of the MLE for a given dataset
+    */
+    double MarkovChain::log_likelihood(const vector<Sequence>& df, int oversize) const{
+            auto f = MLE(df, oversize);
             double ll = 0.0;
             for(int i = 0; i < numStates; i++){
                 for(int j = 0; j < numStates; j++){
@@ -576,11 +571,9 @@ namespace Markov
             }
             return ll;
         }
-        
-        
-    };
     
-}
+    
+}//end namespace
 
 #endif
 

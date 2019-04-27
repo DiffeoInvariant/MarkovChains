@@ -3,7 +3,9 @@
 #endif
 #ifndef CFTP_hpp
 #define CFTP_hpp
-
+#ifdef Success
+#undef Success
+#endif
 #include <Eigen/Core>
 #include<deque>
 #include<valarray>
@@ -32,12 +34,12 @@ namespace Markov
    
     //void *threadedMatPow(Eigen::MatrixXd &mat, int pow);
    
-    decltype(auto) variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2);
+    double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2);
 
     decltype(auto) k_stationary_variation_distance(Eigen::MatrixXd trans, int k);
     decltype(auto) mixing_time(Eigen::MatrixXd &trans);
 
-    decltype(auto) isCoalesced(Eigen::MatrixXd &mat);
+    int isCoalesced(Eigen::MatrixXd &mat);
 
     /**
      * @author: Zane Jakobs

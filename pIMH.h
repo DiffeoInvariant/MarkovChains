@@ -1,5 +1,6 @@
 #ifndef pIMH_hpp
 #define pIMH_hpp
+#include "Distributions.h"
 #include<mkl.h>
 #include<omp.h>
 #include<stdio.h>
@@ -85,18 +86,14 @@ namespace Markov
             
             auto vlen = qvec.size() - 1;
             
-            //static_assert(vlen == avec.size());
-            
             auto state = lower_bound;
             //std::cout << "MHFP\n";
             for(int t = 0; t <= n; t++){
                 //compiler will optimize this to not declare a new one each loop
                 auto threshold = accceptance_threshold(state, qvec[vlen - n +t] );
-                //std::cout << "q: " << qvec[vlen - n +t] << "\n";
-                //std::cout << "t: " << accceptance_threshold(lower_bound, qvec[vlen - n+t]) << "\n";
+
                 if(avec[vlen - n + t] < threshold){
                     state = qvec[vlen - n + t];
-                    //std::cout << "accepted\n";
                 }
             }//end for
             return state;
@@ -112,7 +109,6 @@ namespace Markov
             auto avec = Markov::uniform_sample_vector(spar, initial_len);
             auto qvec = Q.create_sample_vector(initial_len);
             bool accepted_first = false;
-            
             int n = 1;
             // #pragma omp parallel
             while(!accepted_first){
