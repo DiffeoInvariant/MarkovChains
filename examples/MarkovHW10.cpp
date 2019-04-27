@@ -14,7 +14,7 @@
 #include<utility>
 #include<array>
 #include<vector>
-#include"Distributions.h"
+#include <Markov/Distributions.h>
 #include<iostream>
 #include<sstream>
 #include<fstream>
@@ -22,7 +22,7 @@
 #include<string>
 #include<ctime>
 #include<algorithm>
-#include"pIMH.h"
+#include <Markov/pIMH.h>
 
 int main(){
     //absolute value (setting last param = true) Cauchy distribution
