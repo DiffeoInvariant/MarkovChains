@@ -37,7 +37,7 @@ int main(){
      h[x_] = f[x]/g[x];
      NMaximize[h[x], x, Reals]
      
-     which returns x -> 0.670516
+     which returns x -> 0.701872
 
      */
     double lowestState = 0.701872;
