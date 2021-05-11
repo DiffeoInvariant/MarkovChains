@@ -31,8 +31,7 @@ namespace Markov
         if you don't have C++17, or some of your program is old and
          won't work with new std types, or std::optional<double>
          if you're compiling with C++17 or later. For this class though, we're going
-         to use a preset value to reduce overhead, since speed is everything
-         in perfect sampling land.*/
+         to use a preset value .*/
         double lower_bound{ 1.11 };
         CandidateDist Q;
         TargetDist pi;
