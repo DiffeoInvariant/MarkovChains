@@ -1,7 +1,7 @@
 /**
  * @summary : implementation of a Markov chain.
  * Note that any individual functions not written by the author here have source links in the comments above the declaration
- * @author : Zane Jakobs
+ * @author : Emily Jakobs
  */
 #ifndef EIGEN_USE_MKL_ALL
 #define EIGEN_USE_MKL_ALL
@@ -26,7 +26,6 @@
 #include<complex>
 #include"../include/MarkovFunctions.h"
 using namespace std;
-using namespace Markov;
 namespace Markov
 {
 
@@ -63,7 +62,7 @@ namespace Markov
 
     
         /**
-         * @author: Zane Jakobs
+         * @author: Emily Jakobs
          * @summary: computes transition matrix based on empirical distribution of values. In
          * particular, attempts to find which entries should be zero
          * @param dat: the data
@@ -180,7 +179,7 @@ namespace Markov
             return false;
         }
         /**
-         * @author: Zane Jakobs
+         * @author: Emily Jakobs
          * @return: matrix of number of paths of length n from state i to state j
          */
         Eigen::MatrixXd MarkovChain::numPaths(int n) const{
@@ -205,7 +204,7 @@ namespace Markov
         
         
         /**
-         * @author: Zane Jakobs
+         * @author: Emily Jakobs
          * @return 1 or 0 for if state j can be reached from state i
          */
     Eigen::MatrixXd MarkovChain::isReachable() const{
@@ -240,7 +239,7 @@ namespace Markov
             return false;
         }
         /**
-         * @author: Zane Jakobs
+         * @author: Emily Jakobs
          * @return matrix where each row has a 1 in the column of each element in that communicating class (one row = one class)
          */
         Eigen::MatrixXd MarkovChain::communicatingClasses() const{
@@ -298,7 +297,7 @@ namespace Markov
         }
         
         /**
-         * @author: Zane Jakobs
+         * @author: Emily Jakobs
          * @return: expected value of (T = min n >= 0 s.t. X_n  = sh) | X_0 = s0
          * @param s0: initial state
          * @param sh: target state
@@ -374,7 +373,7 @@ namespace Markov
         }
         
         /**
-         * @author: Zane Jakobs
+         * @author: Emily Jakobs
          * @param s0: initial state
          * @param sInt: intermediate state
          * @param sEnd: end state
@@ -442,7 +441,7 @@ namespace Markov
             
         }
         /**
-         * @author: Zane Jakobs
+         * @author: Emily Jakobs
          * @param s0: initial state
          * @param sInt: intermediate state
          * @param sEnd: end state
@@ -520,7 +519,7 @@ namespace Markov
         }//end function
         
         /**
-         * @author: Zane Jakobs
+         * @author: Emily Jakobs
          * @param t: time difference
          * @return: cov(X_s,X_{s+t}), taken from HMM for Time Series: an Intro Using R page 18
          */
@@ -549,7 +548,7 @@ namespace Markov
         }
         
         /**
-         * @author: Zane Jakobs
+         * @author: Emily Jakobs
          * @param t: time difference
          * @return: corr(X_s,X_{s+t}), taken from HMM for Time Series: an Intro Using R page 18
          */
@@ -558,7 +557,7 @@ namespace Markov
             return correlation;
         }
     /**
-    *@author Zane Jakobs
+    *@author Emily Jakobs
     *@return log likelihood of the MLE for a given dataset
     */
     double MarkovChain::log_likelihood(const vector<Sequence>& df, int oversize) const{
