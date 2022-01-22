@@ -10,7 +10,7 @@
 using namespace std;
 using namespace Markov;
 /**
- *@author Zane Jakobs
+ *@author Emily Jakobs
  */
 void dispMainMenu(){
     std::cout <<endl;
