@@ -15,7 +15,7 @@ namespace Markov
 {
 
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@brief: a class to run the perfect independent Metropolis Hastings algorithm
      developed by Jem Corcoran and R.L. Tweedie. Original paper at
      https://projecteuclid.org/euclid.aoap/1015345299#abstract
@@ -48,7 +48,7 @@ namespace Markov
         }
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          *@algorithm by Corcoran and Tweedie
          *@return: "larger" of x and y according to the partial order for perfect IMH
          */
@@ -68,14 +68,14 @@ namespace Markov
             return ratio < 1.0 ? ratio : static_cast<double>(1.0);
         }
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          *@brief: finds \ell from the paper, lower bound on reordered sample space
          */
         //constexpr auto find_lower_bound(const TargetDist& _pi) const noexcept;
         
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          *@brief: runs the classical Metropolis Hastings algorithm with
          * a symmetric transition kernel from time t = -n to 0 with pre-chosen
          * samples from the uniform and from the candidate
@@ -99,7 +99,7 @@ namespace Markov
         }
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          *@brief: runs the perfect IMH algorithm once
          */
         auto perfect_IMH_sample(unsigned initial_len, pair<default_random_engine, uniform_real_distribution<double> >& spar) const noexcept
