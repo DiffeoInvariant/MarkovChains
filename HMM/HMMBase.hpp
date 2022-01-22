@@ -48,7 +48,7 @@ namespace Markov {
     
     
     /**
-     * @author: Zane Jakobss
+     * @author: Emily Jakobss
      * @param _dtype: what sort of data will the model take?
      * @param n_distribution: how many distributions?
      * @param dist: what sort of distribution? Must choose from options in Markov namespace (Distributions.hpp)
@@ -102,7 +102,7 @@ namespace Markov {
         void set_default_distribution_params();
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          * @param hiddenState, observed_state: what state is the model in?
          * @return: prediction of the next step (maybe distribution? figure this out later)
          */
