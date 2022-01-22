@@ -8,21 +8,13 @@
 #include<array>
 #include<gsl/gsl_cdf.h>
 #include<type_traits>
-/**
- NOTE FROM AUTHOR (ZANE JAKOBS):
- ONLY KEEP #include<optional> IF YOU ARE COMPILING WITH C++17 OR LATER
-IF YOU ARE COMPILING WITH C++14 OR EARLIER, USE std::pair<T,bool> TO
- RECREATE THE FUNCTIONALITY OF std::optional<T>; THAT IS, THE SIGNATURE
- template<typename T>
- auto func(std::optional<T> param) { param ? return param
- */
 #include<optional>
 using namespace std;
-//using namespace Markov;
+
 namespace Markov {
     
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@param T: floating-point type of sample
      *@return: reference to std::pair containing a uniform(0,1) distribution of type T and a random engine
      */
@@ -32,7 +24,7 @@ namespace Markov {
     double uniform_sample(pair<default_random_engine, uniform_real_distribution<double> >& spair) noexcept;
     /**
      *@brief returns array of n samples from U(0,1) distribution
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@param T: type of sample (double, float, etc)
      *@param n: length of sample
      *@return: array of n samples from uniform(0,1) distribution
@@ -50,7 +42,7 @@ namespace Markov {
     }
     
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@return: length-many samples from a U(lower, upper) distribution.
      */
    // template<typename T>
@@ -58,12 +50,12 @@ namespace Markov {
     vector<double> uniform_sample_vector(pair<default_random_engine, uniform_real_distribution<double> >& spar, size_t length) noexcept;
     
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@brief: vector with additions-many more samples from a U(lower, upper) distribution.
      */
     vector<double> update_uniform_sample_vector(vector<double>& sample_seq, pair<default_random_engine, uniform_real_distribution<double> >& spar, unsigned additions) noexcept;
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@param inv_cdf: inverse CDF function
      *@preconditon: iCDfunc must return double, or a type that can be implicitly converted
      *@return: returns array of n independent samples from distribution by taking F^{-1}(x), x ~ Unif(0,1)
@@ -167,13 +159,13 @@ namespace Markov {
         double sample() const noexcept;
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          *@return: vector of samples from a normal distribution
          */
         vector<double> create_sample_vector(unsigned length) const noexcept;
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          *@param additions: how many samples to push_back?
          *@brief: vector with additions many new samples from a Normal(mu,sigma) distribution.
          */
@@ -213,7 +205,7 @@ namespace Markov {
     
     
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *see https://pdfs.semanticscholar.org/d91f/bda26e5824717245e35621e961885cbee2b3.pdf
      * particularly useful for econometric modeling with GAS models
      */
@@ -310,13 +302,13 @@ namespace Markov {
         double sample() const noexcept;
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          *@return: vector of samples from a Cauchy distribution
          */
         vector<double> create_sample_vector(unsigned length) const noexcept;
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          *@param additions: how many samples to push_back?
          *@brief: vector with additions many new samples from a Cauchy(mu,sigma) distribution.
          */
