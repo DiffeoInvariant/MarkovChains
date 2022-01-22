@@ -2,7 +2,7 @@
 //  MarkovHW11.cpp
 //  
 //
-//  Created by Zane Jakobs on 4/25/19.
+//  Created by Emily Jakobs on 4/25/19.
 //
 
 #include <iostream>
