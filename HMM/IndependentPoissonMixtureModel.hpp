@@ -30,14 +30,14 @@ namespace Markov {
         IndependentPoissonMixtureModel();
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          * @summary: transform into working parameters for independent Poisson mixture model
          */
         void forward_parameter_transform();
         
     
         /**
-        *@author: Zane Jakobs
+        *@author: Emily Jakobs
         * @summary: transform from working parameters back into
         * regular parameters for independent Poisson mixture model. Functional inverse of
         * forward_parameter_transform().
@@ -45,37 +45,37 @@ namespace Markov {
         void inverse_parameter_transform();
     
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          * @param tht: parameter vector
          */
         void set_theta(vector<distribution_parameter>& tht);
     
         /**
-        *@author: Zane Jakobs
+        *@author: Emily Jakobs
          * @summary: sets lambda_i to DBL_MAX
          */
         void set_default_distribution_params();
     
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          * @param x: probability of getting x from Poisson model
          */
         double discrete_weighted_prob(int x);
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          *@return: expected value of the model given params
          */
         double model_expectation();
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          *@return: Variance of the model given params
          */
         double model_variance();
         
         /**
-         *@author: Zane Jakobs
+         *@author: Emily Jakobs
          * @param hiddenState, observed_state: what state is the model in?
          * @return: prediction of the next step (maybe distribution? figure this out later)
          */
