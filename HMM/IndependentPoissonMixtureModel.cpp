@@ -20,7 +20,7 @@
 
 
 /**
- *@author: Zane Jakobs
+ *@author: Emily Jakobs
  * @summary: transform into working parameters for independent Poisson mixture model
  */
 template<> void IndependentPoissonMixtureModel::forward_parameter_transform(){
@@ -44,7 +44,7 @@ template<> void IndependentPoissonMixtureModel::forward_parameter_transform(){
 }
 
 /**
- *@author: Zane Jakobs
+ *@author: Emily Jakobs
  * @summary: transform from working parameters back into
  * regular parameters for independent Poisson mixture model. Functional inverse of
  * forward_parameter_transform().
@@ -71,7 +71,7 @@ template<> void HMM<int, Poisson, true>::inverse_parameter_transform(){
     }
 }
 /**
- *@author: Zane Jakobs
+ *@author: Emily Jakobs
  * @param x: probability of getting x from Poisson model
  */
 template<>
@@ -91,7 +91,7 @@ double IndependentPoissonMixtureModel::discrete_weighted_prob(int x){
 }
 
 /**
- *@author: Zane Jakobs
+ *@author: Emily Jakobs
  *@return: expected value of the model given params
  */
 template<>
@@ -104,7 +104,7 @@ double IndependentPoissonMixtureModel::model_expectation(){
 }
 
 /**
- *@author: Zane Jakobs
+ *@author: Emily Jakobs
  *@return: Variance of the model given params
  */
 template<>
@@ -123,7 +123,7 @@ double IndependentPoissonMixtureModel::model_variance(){
 }
 
 /**
- *@author: Zane Jakobs
+ *@author: Emily Jakobs
  * @summary: sets lambda_i to DBL_MAX
  */
 template<> void IndependentPoissonMixtureModel::set_default_distribution_params(){
@@ -144,7 +144,7 @@ template<> void IndependentPoissonMixtureModel::set_default_distribution_params(
 }
 
 /**
- *@author: Zane Jakobs
+ *@author: Emily Jakobs
  * @param tht: parameter vector
  */
 template<> void IndependentPoissonMixtureModel::set_theta(vector<distribution_parameter>& tht){
