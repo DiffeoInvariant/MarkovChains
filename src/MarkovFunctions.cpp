@@ -21,13 +21,6 @@ using namespace std;
 using namespace Eigen;
 namespace Markov
 {
-    /**
-     Taken from Effective Modern C++
-     *@author: Scott Meyers
-     *@param T: type of array
-     *@param N: length of array
-     *@return: length of array
-     */
     template<typename T, size_t N>
     constexpr size_t arr_size(T (&)[N]) noexcept
     {
@@ -179,7 +172,7 @@ namespace Markov
     }
     
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @param mat: matrix to convert to LAPACKE form
      * @return: pointer to array containing contents of mat in column-major order
      */
@@ -284,7 +277,7 @@ namespace Markov
         return mat;
     }
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@param mat: matrix to raise to power, passed by value for safe use with class members
      *@param expon: power
      *@return: mat^expon
@@ -310,7 +303,7 @@ namespace Markov
     }
     
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @param M: type of thing we're taking the polynomial of--specialized for
      * Eigen::MatrixXd and MatrixXcd. Default template works for numeric data types
      * @return: P(x) = (x-lambda_1)*(x-lambda_2)*...*(x-lambda_n)
