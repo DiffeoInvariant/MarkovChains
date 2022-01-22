@@ -28,7 +28,7 @@ template<typename _dtype, typename dist, bool independent = false> HMMBase::HMMB
 }
 
 /**
- * @author: Zane Jakobs
+ * @author: Emily Jakobs
  * @return: are all variances \geq the minimum variance?
  */
 template<typename _dtype, typename dist, bool independent = false> bool HMMBase::has_acceptable_variance(){
@@ -41,7 +41,7 @@ template<typename _dtype, typename dist, bool independent = false> bool HMMBase:
 }
 
 /**
- * @author:Zane Jakobs
+ * @author: Emily Jakobs
  * @return: likelihood function of discrete random variable given our data and the model's parameters
  */
 template<>
@@ -58,7 +58,7 @@ double HMMBase::discrete_likelihood(){
 }
 
 /**
- * @author:Zane Jakobs
+ * @author: Emily Jakobs
  * @return: likelihood function of continuous random variable given our data and the model's parameters
  */
 template<>
