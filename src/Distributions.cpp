@@ -4,11 +4,10 @@
 #include <cstdlib>
 #include "../include/Distributions.h"  
 using namespace std;
-//using namespace Markov;
 namespace Markov {
     
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@return: reference to std::pair containing a uniform(0,1) distribution of type double and a random engine
      */
     pair<default_random_engine, uniform_real_distribution<double> > std_sampler_pair() noexcept
@@ -21,7 +20,7 @@ namespace Markov {
     
     /**
      *@brief returns array of n samples from U(0,1) distribution
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@param T: type of sample (double, float, etc)
      *@param n: length of sample
      *@return: array of n samples from uniform(0,1) distribution
@@ -138,7 +137,7 @@ namespace Markov {
     }
     
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@return: vector of samples from a normal distribution
      */
     vector<double> Normal::create_sample_vector(unsigned length) const noexcept{
@@ -153,7 +152,7 @@ namespace Markov {
     }
     
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@param additions: how many samples to push_back?
      *@brief: vector with additions many new samples from a Normal(mu,sigma) distribution.
      */
@@ -347,9 +346,8 @@ namespace Markov {
     }
     
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@return: vector of samples from a normal distribution
-     * TODO: TEMPLATIZE SAMPLE VECTOR CREATION
      */
     vector<double> Cauchy::create_sample_vector(unsigned length) const noexcept{
         random_device rd;
@@ -363,7 +361,7 @@ namespace Markov {
     }
     
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      *@param additions: how many samples to push_back?
      *@brief: vector with additions many new samples from a Normal(mu,sigma) distribution.
      */
