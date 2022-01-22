@@ -1,6 +1,6 @@
 /**
  * @summary : implementation of a Markov chain.
- * @author : Zane Jakobs
+ * @author : Emily Jakobs
  */
 #ifndef EIGEN_USE_MKL_ALL
 #define EIGEN_USE_MKL_ALL
@@ -101,7 +101,7 @@ public:
     }
 
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @summary: computes transition matrix based on empirical distribution of values. In
      * particular, attempts to find which entries should be zero
      * @param df: the data
@@ -147,13 +147,13 @@ public:
      */
     bool contains(const Eigen::MatrixXd& mat, double key) const noexcept;
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @return: matrix of number of paths of length n from state i to state j
      */
     Eigen::MatrixXd numPaths(int n) const;
     
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @return 1 or 0 for if state j can be reached from state i
      */
     Eigen::MatrixXd isReachable() const;
@@ -161,28 +161,28 @@ public:
     template<typename T>
     constexpr static bool isInVec(const std::vector<T>& v, T key);
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @return matrix where each row has a 1 in the column of each element in that communicating class (one row = one class)
      */
     Eigen::MatrixXd communicatingClasses() const;
  
     
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @return: expected value of (T = min n >= 0 s.t. X_n  = sh) | X_0 = s0
      * @param s0: initial state
      * @param sh: target state
      */
     double expectedHittingTime(int s0, int sh) const;
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @param s0: initial state
      * @param sInt: intermediate state
      * @return: mean time the chain spends in sInt, starting at s0, before returning to s0
      */
     double meanTimeInStateBeforeReturn(int s0, int sInt) const;
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @param s0: initial state
      * @param sInt: intermediate state
      * @param sEnd: end state
@@ -191,20 +191,20 @@ public:
     double meanTimeInStateBeforeHit(int s0, int sInt, int sEnd) const;
     
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @param t: time difference
      * @return: cov(X_s,X_{s+t}), taken from HMM for Time Series: an Intro Using R page 18
      */
     double cov(int t) const;
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @param t: time difference
      * @return: corr(X_s,X_{s+t}), taken from HMM for Time Series: an Intro Using R page 18
      */
     double corr(int t) const;
     
     /**
-     *@author Zane Jakobs
+     *@author Emily Jakobs
      *@return log likelihood of the MLE for a given dataset
      */
     double log_likelihood(const vector<Sequence>& df, int oversize) const;
