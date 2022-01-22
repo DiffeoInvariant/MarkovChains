@@ -24,7 +24,7 @@ namespace Markov
 {
     
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @param mat: matrix to raise to power
      * @param _pow: power of matrix
      * @return: mat^_pow
@@ -42,14 +42,14 @@ namespace Markov
     int isCoalesced(const Eigen::MatrixXd &mat);
 
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @summary: voter CFTP algorithm to perfectly sample from the Markov chain with transition matrix mat. Algorithm from https://pdfs.semanticscholar.org/ef02/fd2d2b4d0a914eba5e4270be4161bcae8f81.pdf
      * @return: perfect sample from matrix's distribution
      */
     int voter_CFTP(const Eigen::MatrixXd &mat);
 
     /**
-     *@author: Zane Jakobs
+     *@author: Emily Jakobs
      * @param trans: transition matrix
      * @param gen, dis: random number generator stuff
      * @param mat: transition matrix
@@ -64,7 +64,7 @@ namespace Markov
                           Eigen::MatrixXd &M, Eigen::MatrixXd &temp,
                           int &nStates, bool coalesced);
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @param mat: matrix to sample from
     * @param n: how many samples
      * @return: vector where i-th entry is the number of times state i appeared
@@ -72,7 +72,7 @@ namespace Markov
     valarray<int> sampleVoterCFTP(const Eigen::MatrixXd &mat, int n);
 
     /**
-     * @author: Zane Jakobs
+     * @author: Emily Jakobs
      * @param mat: matrix to sample from
      * @param n: how many samples
      * @return: VectorXd where i-th entry is the density of state i
