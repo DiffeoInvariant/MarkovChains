@@ -2,7 +2,7 @@
 //  distTest.cpp
 //  
 //
-//  Created by Zane Jakobs on 4/6/19.
+//  Created by Emily Jakobs on 4/6/19.
 //
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
