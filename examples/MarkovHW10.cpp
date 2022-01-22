@@ -2,7 +2,7 @@
 //  MarkovHW10.cpp
 //  
 //
-//  Created by Zane Jakobs on 4/23/19.
+//  Created by Emily Jakobs on 4/23/19.
 //
 
 #ifndef _USE_MATH_DEFINES
