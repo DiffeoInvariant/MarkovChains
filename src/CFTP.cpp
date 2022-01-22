@@ -22,7 +22,7 @@ using namespace Eigen;
 using namespace Markov;
 namespace Markov{
 /**
- * @author: Zane Jakobs
+ * @author: Emily Jakobs
  * @param mat: matrix to raise to power
  * @param _pow: power of matrix
  * @return: mat^_pow
@@ -42,7 +42,7 @@ namespace Markov{
     
 
 /**
- *@author: Zane Jakobs
+ *@author: Emily Jakobs
  *@brief: returns the variation distance between distributions 1 and 2. Passes by value
         because we don't want to modify the distributions, but we need to copy them to
         do that, and pass-by-val is the most efficient way
@@ -72,7 +72,7 @@ double variation_distance(Eigen::MatrixXd dist1, Eigen::MatrixXd dist2){
     return sum;
 }
 /**
- *@author: Zane Jakobs
+ *@author: Emily Jakobs
  *@brief: returns the maximum of the variation distances between the
             distributions of the rows of trans^K and a very good proxy of
             the stationary distribution
@@ -119,7 +119,7 @@ int isCoalesced(const Eigen::MatrixXd &mat){
    
 
 /**
- * @author: Zane Jakobs
+ * @author: Emily Jakobs
  * @summary: voter CFTP algorithm to perfectly sample from the Markov chain with transition matrix mat. Algorithm from https://pdfs.semanticscholar.org/ef02/fd2d2b4d0a914eba5e4270be4161bcae8f81.pdf
  * @return: perfect sample from matrix's distribution
  */
@@ -176,7 +176,7 @@ int voter_CFTP(const Eigen::MatrixXd &mat){
 }
 
 /**
- *@author: Zane Jakobs
+ *@author: Emily Jakobs
  * @param trans: transition matrix
  * @param gen, dis: random number generator stuff
  * @param mat: transition matrix
@@ -229,7 +229,7 @@ int iteratedVoterCFTP(std::mt19937 &gen, std::uniform_real_distribution<> &dis,
 
 
 /**
- * @author: Zane Jakobs
+ * @author: Emily Jakobs
  * @param mat: matrix to sample from
  * @param n: how many samples
  * @return: vector where i-th entry is the number of times state i appeared
@@ -256,7 +256,7 @@ std::valarray<int> sampleVoterCFTP(const Eigen::MatrixXd &mat, int n){
 }
 
 /**
- * @author: Zane Jakobs
+ * @author: Emily Jakobs
  * @param mat: matrix to sample from
  * @param n: how many samples
  * @return: VectorXd where i-th entry is the density of state i
